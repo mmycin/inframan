@@ -1,0 +1,87 @@
+# Compiled object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Static & dynamic libraries
+*.a
+*.la
+*.lib
+*.so
+*.dylib
+*.dll
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Build directories
+build/
+Build/
+bin/
+obj/
+out/
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Autotools
+aclocal.m4
+autom4te.cache/
+configure
+config.log
+config.status
+
+# Logs
+*.log
+
+# IDE: Visual Studio Code
+.vscode/
+
+# IDE: CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# IDE: Visual Studio
+*.vcxproj*
+*.sln
+*.opensdf
+*.sdf
+*.cache
+*.VC.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+
+# Coverage / profiling
+*.gcda
+*.gcno
+*.prof
+*.profraw
+*.profdata
+
+# Dependency folders (if any)
+deps/
+third_party/build/
+
+# Package managers (optional)
+conanbuildinfo.*
+conaninfo.txt
