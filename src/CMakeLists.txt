@@ -9,6 +9,7 @@ target_include_directories(app
     PRIVATE ${PROJECT_SOURCE_DIR}/include
 )
 
+# Use PROJECT_BINARY_DIR instead of CMAKE_BINARY_DIR for consistency
 set_target_properties(app PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
 )
