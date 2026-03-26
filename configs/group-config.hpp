@@ -2,8 +2,14 @@
 #include <string>
 #include <unordered_map>
 
+using namespace std;
+
 namespace GroupConfig {
-    inline static const std::string group_path = "";
+    #ifdef _WIN32
+        inline static const string group_path = "C:/ProgramData/inframanager/groups/";
+    #else
+        inline static const string group_path = "/var/inframanager/groups/";
+    #endif
     
     enum class Providers {
         DOCKER,
@@ -23,7 +29,7 @@ namespace GroupConfig {
         UNKNOWN
     };
     
-    inline std::string providerToString(Providers provider) {
+    inline string providerToString(Providers provider) {
         switch (provider) {
             case Providers::DOCKER:     return "docker";
             case Providers::PODMAN:     return "podman";
@@ -32,7 +38,7 @@ namespace GroupConfig {
         }
     }
     
-    inline std::string typeToString(Type type) {
+    inline string typeToString(Type type) {
         switch (type) {
             case Type::DOCKERFILE: return "dockerfile";
             case Type::COMPOSE:    return "compose";
@@ -45,8 +51,8 @@ namespace GroupConfig {
         }
     }
     
-    inline Providers providerFromString(const std::string& str) {
-        static const std::unordered_map<std::string, Providers> map = {
+    inline Providers providerFromString(const string& str) {
+        static const unordered_map<string, Providers> map = {
             {"docker", Providers::DOCKER},
             {"podman", Providers::PODMAN},
             {"containerd", Providers::CONTAINERD}
@@ -55,8 +61,8 @@ namespace GroupConfig {
         return it != map.end() ? it->second : Providers::UNKNOWN;
     }
     
-    inline Type typeFromString(const std::string& str) {
-        static const std::unordered_map<std::string, Type> map = {
+    inline Type typeFromString(const string& str) {
+        static const unordered_map<string, Type> map = {
             {"dockerfile", Type::DOCKERFILE},
             {"compose", Type::COMPOSE},
             {"service", Type::SERVICE},

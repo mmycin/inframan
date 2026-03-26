@@ -7,7 +7,10 @@ file(GLOB_RECURSE SRC_FILES
 add_executable(app ${SRC_FILES})
 
 target_include_directories(app
-    PRIVATE ${PROJECT_SOURCE_DIR}/include
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/include/libraries
+        ${PROJECT_SOURCE_DIR}/configs
 )
 
 # Use PROJECT_BINARY_DIR instead of CMAKE_BINARY_DIR for consistency

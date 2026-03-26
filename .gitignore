@@ -85,3 +85,5 @@ third_party/build/
 # Package managers (optional)
 conanbuildinfo.*
 conaninfo.txt
+
+infragroups.json
