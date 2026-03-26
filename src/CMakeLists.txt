@@ -1,5 +1,6 @@
 file(GLOB_RECURSE SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/commands/*.cpp
 )
 
 # Create executable with all source files
@@ -11,5 +12,5 @@ target_include_directories(app
 
 # Use PROJECT_BINARY_DIR instead of CMAKE_BINARY_DIR for consistency
 set_target_properties(app PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
 )
