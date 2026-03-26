@@ -24,9 +24,17 @@ endif()
 add_subdirectory(src)
 add_subdirectory(tests)
 
-target_include_directories(app PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(app PRIVATE ${PROJECT_SOURCE_DIR}/configs)
-target_include_directories(app PRIVATE ${PROJECT_SOURCE_DIR}/include/libraries)
+target_include_directories(app 
+	PRIVATE 
+		${PROJECT_SOURCE_DIR}/include
+		${PROJECT_SOURCE_DIR}/configs
+		${PROJECT_SOURCE_DIR}/include/libraries
+)
+
+target_precompile_headers(app
+    PRIVATE
+        ${LIBRARY_HEADERS}
+)
 
 add_custom_target(run
     COMMAND $<TARGET_FILE:app>

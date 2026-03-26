@@ -1,5 +1,5 @@
 #include "CLI11.hpp"
-#include "app.hpp"
+#include "app-config.hpp"
 
 using namespace std;
 using namespace CLI;
