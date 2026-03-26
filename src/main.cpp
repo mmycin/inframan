@@ -1,9 +1,11 @@
 #include "CLI11.hpp"
+#include "app.hpp"
 
 using namespace std;
+using namespace CLI;
 
 int main(int argc, char** argv) {
-    CLI::App app{"InfraManager - Run your infrastructure regionally."};
+    App app{AppConfig::name, AppConfig::description};
     argv = app.ensure_utf8(argv);
 
     CLI11_PARSE(app, argc, argv);

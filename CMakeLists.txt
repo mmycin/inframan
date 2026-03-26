@@ -25,6 +25,7 @@ add_subdirectory(src)
 add_subdirectory(tests)
 
 target_include_directories(app PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(app PRIVATE ${PROJECT_SOURCE_DIR}/configs)
 target_include_directories(app PRIVATE ${PROJECT_SOURCE_DIR}/include/libraries)
 
 add_custom_target(run
