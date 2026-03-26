@@ -480,21 +480,21 @@ template <> struct Traits<Mode::truncate> { using Base = ReadWrite; };
 template <> struct Traits<Mode::append> { using Base = Write; };
 template <> struct Traits<Mode::readAppend> { using Base = ReadWrite; };
 
-template <> const char* newlineString<Newline::atari8>() { return "\x9b"; }
-template <> const char* newlineString<Newline::cr>() { return "\r"; }
-template <> const char* newlineString<Newline::cr_lf>() { return "\r\n"; }
-template <> const char* newlineString<Newline::lf>() { return "\n"; }
-template <> const char* newlineString<Newline::lf_cr>() { return "\n\r"; }
-template <> const char* newlineString<Newline::nl>() { return "\x15"; }
-template <> const char* newlineString<Newline::rs>() { return "\x1e"; }
-template <> const char* newlineString<Newline::zx8x>() { return "\x76"; }
+template <> inline const char* newlineString<Newline::atari8>() { return "\x9b"; }
+template <> inline const char* newlineString<Newline::cr>() { return "\r"; }
+template <> inline const char* newlineString<Newline::cr_lf>() { return "\r\n"; }
+template <> inline const char* newlineString<Newline::lf>() { return "\n"; }
+template <> inline const char* newlineString<Newline::lf_cr>() { return "\n\r"; }
+template <> inline const char* newlineString<Newline::nl>() { return "\x15"; }
+template <> inline const char* newlineString<Newline::rs>() { return "\x1e"; }
+template <> inline const char* newlineString<Newline::zx8x>() { return "\x76"; }
 
-template <> const char* modeString<Mode::read>() { return "r"; }
-template <> const char* modeString<Mode::readWrite>() { return "r+"; }
-template <> const char* modeString<Mode::write>() { return "w"; }
-template <> const char* modeString<Mode::truncate>() { return "w+"; }
-template <> const char* modeString<Mode::append>() { return "a"; }
-template <> const char* modeString<Mode::readAppend>() { return "a+"; }
+template <> inline const char* modeString<Mode::read>() { return "r"; }
+template <> inline const char* modeString<Mode::readWrite>() { return "r+"; }
+template <> inline const char* modeString<Mode::write>() { return "w"; }
+template <> inline const char* modeString<Mode::truncate>() { return "w+"; }
+template <> inline const char* modeString<Mode::append>() { return "a"; }
+template <> inline const char* modeString<Mode::readAppend>() { return "a+"; }
 
 template <Mode MODE>
 class Opener : public Traits<MODE>::Base {

@@ -122,7 +122,8 @@ void CreateGroup::validateTypeChoice() {
 }
 
 bool CreateGroup::checkGroupExists() {
-    return false; // TODO: query registry
+    GroupRegistry registry("infragroups.json");
+    return registry.groupExists(group_name);
 }
 
 void CreateGroup::handleExistingGroup() {
@@ -244,7 +245,7 @@ void CreateGroup::saveToRegistry() {
     );
 
     // Verify the write succeeded
-    if (!registry.verifyGroup(group_name))
+    if (!registry.groupExists(group_name))
         throw runtime_error("Registry verification failed for group: " + group_name);
 
     cout << "  Registry updated: " << registry_file << "\n";
