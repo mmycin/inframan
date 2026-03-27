@@ -81,6 +81,15 @@ void RunGroup::runAllJobs() {
     if (jobs.empty())
         throw std::runtime_error("No jobs found in group '" + group_name + "'.");
 
+    // Get group provider and type for auto-detection
+    auto groups = registry.getGroups();
+    auto group_data = groups[group_name];
+    std::string provider_str = group_data.value("provider", "docker");
+    std::string type_str = group_data.value("type", "compose");
+    
+    auto provider = GroupConfig::providerFromString(provider_str);
+    auto type = GroupConfig::typeFromString(type_str);
+
     // Summary table
     tabulate::Table summary;
     summary.add_row({"GROUP", "JOBS TO RUN"});
@@ -96,7 +105,14 @@ void RunGroup::runAllJobs() {
         const std::string& job_name  = it.key();
         const auto&        job_data  = it.value();
 
-        std::string command   = job_data.value("command",   "");
+        // Use auto-detected command if it's not a custom type
+        std::string command;
+        if (type != GroupConfig::Type::CUSTOM) {
+            command = GroupConfig::autoDetectCommand(provider, type, job_name);
+        } else {
+            command = job_data.value("command", "");
+        }
+        
         std::string file_path = job_data.value("file_path", "");
 
         if (command.empty()) {

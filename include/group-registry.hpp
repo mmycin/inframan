@@ -53,14 +53,35 @@ public:
 
     void addOrUpdateJob(const std::string& group,
                         const std::string& job_name,
-                        const std::string& file_path,
-                        const std::string& command) {
+                        const std::string& file_path = "",
+                        const std::string& command = "") {
         nlohmann::json root = load();
         requireGroup(root, group);
+        
+        // Auto-detect file_path and command if not provided
+        std::string detected_file = file_path;
+        std::string detected_command = command;
+        
+        if (file_path.empty() || command.empty()) {
+            auto group_data = root["groups"][group];
+            std::string provider_str = group_data.value("provider", "docker");
+            std::string type_str = group_data.value("type", "compose");
+            
+            auto provider = GroupConfig::providerFromString(provider_str);
+            auto type = GroupConfig::typeFromString(type_str);
+            
+            if (detected_file.empty()) {
+                detected_file = GroupConfig::autoDetectFilePath(type, job_name);
+            }
+            if (detected_command.empty()) {
+                detected_command = GroupConfig::autoDetectCommand(provider, type, job_name);
+            }
+        }
+        
         root["groups"][group]["jobs"][job_name] = {
             {"name",      job_name},
-            {"file_path", file_path},
-            {"command",   command}
+            {"file_path", detected_file},
+            {"command",   detected_command}
         };
         save(root);
     }

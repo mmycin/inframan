@@ -75,4 +75,51 @@ namespace GroupConfig {
         auto it = map.find(str);
         return it != map.end() ? it->second : Type::UNKNOWN;
     }
+
+    // Auto-detection functions for provider and type-based commands
+    inline std::string autoDetectCommand(Providers provider, Type type, const std::string& job_name = "") {
+        std::string provider_cmd = providerToString(provider);
+        
+        switch (type) {
+            case Type::COMPOSE:
+                return provider_cmd + "-compose up -d";
+            case Type::DOCKERFILE:
+                return provider_cmd + " build -t " + (job_name.empty() ? "app" : job_name) + " . && " + provider_cmd + " run -d " + (job_name.empty() ? "app" : job_name);
+            case Type::SERVICE:
+                return provider_cmd + " service start " + (job_name.empty() ? "service" : job_name);
+            case Type::TASK:
+                return provider_cmd + " run --rm " + (job_name.empty() ? "task" : job_name);
+            case Type::NETWORK:
+                return provider_cmd + " network create " + (job_name.empty() ? "network" : job_name);
+            case Type::VOLUME:
+                return provider_cmd + " volume create " + (job_name.empty() ? "volume" : job_name);
+            case Type::CUSTOM:
+            default:
+                return "";
+        }
+    }
+
+    inline std::string autoDetectFilePath(Type type, const std::string& job_name = "") {
+        switch (type) {
+            case Type::COMPOSE:
+                return "docker-compose.yml";
+            case Type::DOCKERFILE:
+                return "Dockerfile";
+            case Type::SERVICE:
+            case Type::TASK:
+            case Type::NETWORK:
+            case Type::VOLUME:
+            case Type::CUSTOM:
+            default:
+                return "";
+        }
+    }
+
+    inline bool requiresFilePath(Type type) {
+        return type == Type::COMPOSE || type == Type::DOCKERFILE;
+    }
+
+    inline bool requiresCommand(Type type) {
+        return type == Type::CUSTOM;
+    }
 }

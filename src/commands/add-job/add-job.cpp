@@ -44,13 +44,39 @@ void AddJob::run() {
         std::string job_name, file_path, command;
         std::cout << "Enter job name: ";
         std::cin >> job_name;
-        std::cout << "Enter file path: ";
-        std::cin >> file_path;
-        std::cout << "Enter shell command: ";
-        std::cin.ignore();
-        std::getline(std::cin, command);
-
+        
+        // Get group info to determine if file_path and command are required
         GroupRegistry registry(GroupConfig::registry_file);
+        auto groups = registry.getGroups();
+        auto group_data = groups[group_name];
+        std::string provider_str = group_data.value("provider", "docker");
+        std::string type_str = group_data.value("type", "compose");
+        
+        auto provider = GroupConfig::providerFromString(provider_str);
+        auto type = GroupConfig::typeFromString(type_str);
+        
+        // Only prompt for file_path if required by type
+        if (GroupConfig::requiresFilePath(type)) {
+            std::cout << "Enter file path [" << GroupConfig::autoDetectFilePath(type, job_name) << "]: ";
+            std::cin.ignore();
+            std::getline(std::cin, file_path);
+            if (file_path.empty()) {
+                file_path = GroupConfig::autoDetectFilePath(type, job_name);
+            }
+        } else {
+            file_path = GroupConfig::autoDetectFilePath(type, job_name);
+        }
+        
+        // Only prompt for command if it's a custom type
+        if (GroupConfig::requiresCommand(type)) {
+            std::cout << "Enter shell command: ";
+            std::cin.ignore();
+            std::getline(std::cin, command);
+        } else {
+            command = GroupConfig::autoDetectCommand(provider, type, job_name);
+            std::cout << "Auto-detected command: " << command << "\n";
+        }
+
         registry.addOrUpdateJob(group_name, job_name, file_path, command);
 
         tabulate::Table success;

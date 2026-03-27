@@ -5,6 +5,9 @@
 ## Features
 - **Multi-Provider Support**: Support for Docker, Podman, and Containerd runtimes natively.
 - **Group Management**: Segment and group related infrastructure components—such as Dockerfiles, Compose setups, services, networks, and persistent volumes.
+- **Auto-Detection**: Automatically generates appropriate commands based on provider and infrastructure type (COMPOSE, DOCKERFILE, SERVICE, TASK, NETWORK, VOLUME).
+- **Concurrent Execution**: Run multiple infrastructure jobs simultaneously for improved performance.
+- **Smart Configuration**: Only prompts for required information based on infrastructure type.
 - **Fast and Native**: Built in modern C++20 for exceptional performance and minimal footprint.
 - **Cross-Platform**: Fully compatible with Linux and Windows environments out-of-the-box.
 
@@ -23,17 +26,17 @@ git clone https://github.com/mmycin/inframan.git
 cd inframan
 
 # Configure the project
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+just dev-preset  # or cmake -B build -DCMAKE_BUILD_TYPE=Release
 
 # Build the project
-cmake --build build --config Release
+just dev-build    # or cmake --build build --config Release
 ```
 
 The compiled binary will be placed inside the `bin/` directory.
 
 ## Getting Started
 
-InfraMan organizes container workloads into distinct "infrastructure groups". Once set up, you can interact with them rapidly from the CLI.
+InfraMan organizes container workloads into distinct "infrastructure groups" with predefined providers and types. Once set up, you can interact with them rapidly from the CLI.
 
 ```bash
 # Launch the interactive wizard to create a new infrastructure group
@@ -45,6 +48,53 @@ inframan lg
 # Designate an active group as your current context
 inframan use <group_name>
 ```
+
+## Infrastructure Types
+
+InfraMan supports several infrastructure types with auto-detected commands:
+
+- **COMPOSE**: Auto-detects `{provider}-compose up -d` and looks for `docker-compose.yml`
+- **DOCKERFILE**: Auto-detects `{provider} build -t {job_name} . && {provider} run -d {job_name}` and looks for `Dockerfile`
+- **SERVICE**: Auto-detects `{provider} service start {job_name}`
+- **TASK**: Auto-detects `{provider} run --rm {job_name}`
+- **NETWORK**: Auto-detects `{provider} network create {job_name}`
+- **VOLUME**: Auto-detects `{provider} volume create {job_name}`
+- **CUSTOM**: Requires manual command specification
+
+## Usage Examples
+
+```bash
+# Create a compose-based group with Docker provider
+inframan cg
+# Follow prompts: group name="webapps", provider="docker", type="compose"
+
+# Add jobs to the group (auto-detects docker-compose.yml and command)
+inframan aj
+# Enter job name: frontend
+# Auto-detected command: docker-compose up -d
+
+# Run all jobs in the group concurrently
+inframan rg
+
+# Read all jobs with their configurations
+inframan rj
+```
+
+## Commands
+
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `create-group` | `cg` | Create a new infrastructure group |
+| `list-group` | `lg` | List all infrastructure groups |
+| `use-group` | `use` | Set active group context |
+| `add-job` | `aj` | Add a job to a group |
+| `run-group` | `rg` | Run all jobs in a group (concurrently) |
+| `read-job` | `rj` | Read jobs of a group |
+| `update-job` | `uj` | Update a job in a group |
+| `delete-job` | `dj` | Delete a job from a group |
+| `update-group` | `ug` | Update group metadata |
+| `delete-group` | `dg` | Delete a group |
+| `execute-job` | `execute` | Execute a single job |
 
 ## Configuration & Persistence
 InfraMan stores group settings and registry data locally as JSON files. Specifically, it utilizes `.infra_info.json` for mapping out groups. Physical configurations reside at:
