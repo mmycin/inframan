@@ -2,23 +2,21 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 namespace commands {
 
 class AddJob {
 public:
-    inline static const string flag = "aj,--add-job";
-    static const inline vector<string> flags = {"add-job", "aj"};
+    inline static const std::string flag = "aj,--add-job";
+    static const inline std::vector<std::string> flags = {"add-job", "aj"};
 
     static void execute();
     void run();
 
 private:
-    string group_name;
-    string job_name;
-    string file_path;
-    string command;
+    std::string group_name;
+    std::string job_name;
+    std::string file_path;
+    std::string command;
 
     void selectGroup();
     void promptFields();

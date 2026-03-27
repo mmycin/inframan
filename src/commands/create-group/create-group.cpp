@@ -1,12 +1,11 @@
 #include "create-group.hpp"
 #include "group-registry.hpp"
 #include "group-config.hpp"
+#include "libraries/tabulate.hpp"
 
 #include <iostream>
 #include <string>
 #include <stdexcept>
-
-using namespace std;
 
 namespace commands {
 
@@ -18,9 +17,19 @@ void CreateGroup::execute() {
 
 void CreateGroup::run() {
     try {
-        cout << "\n" << string(50, '=') << "\n"
-                  << "     INFRASTRUCTURE GROUP CREATION\n"
-                  << string(50, '=') << "\n";
+        tabulate::Table header;
+        header.add_row({"INFRASTRUCTURE GROUP CREATION"});
+        header[0].format()
+            .font_style({tabulate::FontStyle::bold})
+            .font_align(tabulate::FontAlign::center)
+            .font_color(tabulate::Color::yellow)
+            .border_top("=")
+            .border_bottom("=")
+            .border_left("")
+            .border_right("")
+            .corner("");
+        header.column(0).format().width(50);
+        std::cout << "\n" << header << "\n";
 
         promptForGroupName();
         validateGroupName();
@@ -40,35 +49,35 @@ void CreateGroup::run() {
 
         displayConfirmation();
 
-        cout << "\nProceed with group creation? (y/n): ";
+        std::cout << "\nProceed with group creation? (y/n): ";
         char confirm;
-        cin >> confirm;
+        std::cin >> confirm;
 
         if (confirm == 'y' || confirm == 'Y') {
             createGroupInProvider();
             saveToRegistry();
 
-            cout << "\nGroup '" << group_name << "' created successfully!\n"
+            std::cout << "\nGroup '" << group_name << "' created successfully!\n"
                       << "Location: " << GroupConfig::group_path << group_name << "\n"
-                      << "Run with: inframanager use " << group_name << "\n";
+                      << "Run with: inframan use " << group_name << "\n";
         } else {
-            cout << "\nGroup creation cancelled.\n";
+            std::cout << "\nGroup creation cancelled.\n";
         }
 
-    } catch (const exception& e) {
-        cerr << "\nError: " << e.what() << "\n";
+    } catch (const std::exception& e) {
+        std::cerr << "\nError: " << e.what() << "\n";
     }
 }
 
 // ─── Input / Prompts ─────────────────────────────────────────────────────────
 
 void CreateGroup::promptForGroupName() {
-    cout << "Enter group name: ";
-    cin >> group_name;
+    std::cout << "Enter group name: ";
+    std::cin >> group_name;
 }
 
 void CreateGroup::displayProviderMenu() {
-    cout << "\nSelect Container Runtime Provider:\n"
+    std::cout << "\nSelect Container Runtime Provider:\n"
               << "  1. Docker\n"
               << "  2. Podman\n"
               << "  3. Containerd\n"
@@ -76,11 +85,11 @@ void CreateGroup::displayProviderMenu() {
 }
 
 void CreateGroup::getProviderChoice() {
-    cin >> provider_choice;
+    std::cin >> provider_choice;
 }
 
 void CreateGroup::displayTypeMenu() {
-    cout << "\nSelect Group Type:\n"
+    std::cout << "\nSelect Group Type:\n"
               << "  1. Dockerfile  - Build custom images\n"
               << "  2. Compose     - Multi-container applications\n"
               << "  3. Service     - Long-running services\n"
@@ -92,47 +101,47 @@ void CreateGroup::displayTypeMenu() {
 }
 
 void CreateGroup::getTypeChoice() {
-    cin >> type_choice;
+    std::cin >> type_choice;
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────────
 
 void CreateGroup::validateGroupName() {
     if (group_name.empty())
-        throw runtime_error("Group name cannot be empty");
+        throw std::runtime_error("Group name cannot be empty");
 
     for (char c : group_name)
         if (!isalnum(c) && c != '_' && c != '-')
-            throw runtime_error(
+            throw std::runtime_error(
                 "Group name can only contain alphanumeric characters, '_', and '-'");
 }
 
 void CreateGroup::validateProviderChoice() {
     if (provider_choice < 1 || provider_choice > 3) {
-        cout << "Invalid choice. Using default: Docker\n";
+        std::cout << "Invalid choice. Using default: Docker\n";
         provider_choice = 1;
     }
 }
 
 void CreateGroup::validateTypeChoice() {
     if (type_choice < 1 || type_choice > 7) {
-        cout << "Invalid choice. Using default: Dockerfile\n";
+        std::cout << "Invalid choice. Using default: Dockerfile\n";
         type_choice = 1;
     }
 }
 
 bool CreateGroup::checkGroupExists() {
-    GroupRegistry registry("infragroups.json");
+    GroupRegistry registry(GroupConfig::registry_file);
     return registry.groupExists(group_name);
 }
 
 void CreateGroup::handleExistingGroup() {
-    cout << "Warning: Group '" << group_name << "' already exists!\n"
+    std::cout << "Warning: Group '" << group_name << "' already exists!\n"
               << "Overwrite? (y/n): ";
     char r;
-    cin >> r;
+    std::cin >> r;
     if (r != 'y' && r != 'Y')
-        throw runtime_error("Group creation cancelled by user");
+        throw std::runtime_error("Group creation cancelled by user");
 }
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
@@ -159,7 +168,7 @@ void CreateGroup::setTypeFromChoice() {
 
 // ─── Output / Display ────────────────────────────────────────────────────────
 
-string CreateGroup::getTypeDescription(GroupConfig::Type type) {
+std::string CreateGroup::getTypeDescription(GroupConfig::Type type) {
     switch (type) {
         case GroupConfig::Type::DOCKERFILE: return "Dockerfile - Build custom container images";
         case GroupConfig::Type::COMPOSE:    return "Compose - Multi-container orchestration";
@@ -173,19 +182,32 @@ string CreateGroup::getTypeDescription(GroupConfig::Type type) {
 }
 
 void CreateGroup::displayConfirmation() {
-    cout << "\n" << string(50, '=') << "\n"
-              << "        GROUP CREATION SUMMARY\n"
-              << string(50, '=') << "\n"
-              << "Group Name : " << group_name << "\n"
-              << "Provider   : " << GroupConfig::providerToString(provider) << "\n"
-              << "Type       : " << getTypeDescription(group_type) << "\n"
-              << string(50, '=') << "\n";
+    tabulate::Table summary;
+    summary.add_row({"GROUP CREATION SUMMARY", ""});
+    summary.add_row({"Group Name", group_name});
+    summary.add_row({"Provider", GroupConfig::providerToString(provider)});
+    summary.add_row({"Type", getTypeDescription(group_type)});
+
+    summary[0].format()
+        .font_style({tabulate::FontStyle::bold})
+        .font_align(tabulate::FontAlign::center)
+        .font_color(tabulate::Color::cyan)
+        .border_top("=")
+        .border_bottom("=")
+        .border_left("")
+        .border_right("")
+        .corner("");
+    
+    summary.column(0).format().font_style({tabulate::FontStyle::bold}).width(15);
+    summary.column(1).format().width(35);
+
+    std::cout << "\n" << summary << "\n";
 }
 
 // ─── Type-specific creation ──────────────────────────────────────────────────
 
 void CreateGroup::createGroupInProvider() {
-    cout << "\nCreating group '" << group_name << "'...\n";
+    std::cout << "\nCreating group '" << group_name << "'...\n";
     switch (group_type) {
         case GroupConfig::Type::DOCKERFILE: createDockerfileGroup(); break;
         case GroupConfig::Type::COMPOSE:    createComposeGroup();    break;
@@ -198,44 +220,44 @@ void CreateGroup::createGroupInProvider() {
 }
 
 void CreateGroup::createDockerfileGroup() {
-    cout << "  Creating Dockerfile template...\n"
+    std::cout << "  Creating Dockerfile template...\n"
               << "  Setting up build context...\n";
 }
 
 void CreateGroup::createComposeGroup() {
-    cout << "  Creating docker-compose.yml...\n"
+    std::cout << "  Creating docker-compose.yml...\n"
               << "  Setting up service dependencies...\n";
 }
 
 void CreateGroup::createServiceGroup() {
-    cout << "  Creating service configuration...\n"
+    std::cout << "  Creating service configuration...\n"
               << "  Setting up auto-restart policy...\n";
 }
 
 void CreateGroup::createTaskGroup() {
-    cout << "  Creating task definition...\n"
+    std::cout << "  Creating task definition...\n"
               << "  Setting up execution schedule...\n";
 }
 
 void CreateGroup::createNetworkGroup() {
-    cout << "  Creating network configuration...\n"
+    std::cout << "  Creating network configuration...\n"
               << "  Setting up subnet allocation...\n";
 }
 
 void CreateGroup::createVolumeGroup() {
-    cout << "  Creating volume configuration...\n"
+    std::cout << "  Creating volume configuration...\n"
               << "  Setting up mount points...\n";
 }
 
 void CreateGroup::createCustomGroup() {
-    cout << "  Creating custom configuration...\n"
+    std::cout << "  Creating custom configuration...\n"
               << "  Applying user preferences...\n";
 }
 
 // ─── Registry persistence ────────────────────────────────────────────────────
 
 void CreateGroup::saveToRegistry() {
-    const string registry_file = "infragroups.json";
+    const std::string registry_file = GroupConfig::registry_file;
     GroupRegistry registry(registry_file);
 
     registry.addOrUpdateGroup(
@@ -246,9 +268,9 @@ void CreateGroup::saveToRegistry() {
 
     // Verify the write succeeded
     if (!registry.groupExists(group_name))
-        throw runtime_error("Registry verification failed for group: " + group_name);
+        throw std::runtime_error("Registry verification failed for group: " + group_name);
 
-    cout << "  Registry updated: " << registry_file << "\n";
+    std::cout << "  Registry updated: " << registry_file << "\n";
 }
 
 } // namespace commands

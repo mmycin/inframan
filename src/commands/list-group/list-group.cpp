@@ -1,48 +1,86 @@
+#include "group-config.hpp"
 #include "list-group.hpp"
 #include "group-registry.hpp"
+#include "libraries/tabulate.hpp"
+#include "context-manager.hpp"
 
 #include <iostream>
-#include <iomanip>
-
-using namespace std;
+#include <string>
+#include <vector>
 
 namespace commands {
 
-static const string REGISTRY = "infragroups.json";
-
-void ListGroup::execute() { ListGroup{}.run(); }
+void ListGroup::execute() {
+    ListGroup{}.run();
+}
 
 void ListGroup::run() {
     try {
-        GroupRegistry reg(REGISTRY);
-        auto groups = reg.getGroups();
+        GroupRegistry registry(GroupConfig::registry_file);
+        auto groups = registry.getGroups();
+
+        tabulate::Table header;
+        header.add_row({"INFRASTRUCTURE GROUPS"});
+        header[0].format()
+            .font_style({tabulate::FontStyle::bold})
+            .font_align(tabulate::FontAlign::center)
+            .font_color(tabulate::Color::cyan)
+            .border_top("=")
+            .border_bottom("=")
+            .border_left("")
+            .border_right("")
+            .corner("");
+        header.column(0).format().width(60);
+        std::cout << "\n" << header << "\n";
 
         if (groups.empty()) {
-            cout << "\nNo infrastructure groups found. Create one with: inframanager cg\n";
+            std::cout << "No infrastructure groups found.\n"
+                      << "Create one with: inframan cg\n";
             return;
         }
 
-        cout << "\n" << string(68, '=') << "\n"
-             << left << setw(20) << "GROUP NAME" 
-             << setw(15) << "PROVIDER" 
-             << setw(15) << "TYPE" 
-             << setw(10) << "JOBS" << "\n"
-             << string(68, '=') << "\n";
+        tabulate::Table table;
+        table.add_row({"Group Name", "Provider", "Type", "Jobs"});
 
-        for (const auto& [name, data] : groups.items()) {
-            string provider = data.value("provider", "unknown");
-            string type = data.value("type", "unknown");
+        std::string active_group = ContextManager::getActiveGroup();
+
+        for (auto it = groups.begin(); it != groups.end(); ++it) {
+            std::string name = it.key();
+            auto data = it.value();
+            
+            std::string display_name = name;
+            if (name == active_group) {
+                display_name += " (*)";
+            }
+
             int job_count = data.contains("jobs") ? static_cast<int>(data["jobs"].size()) : 0;
 
-            cout << left << setw(20) << name
-                 << setw(15) << provider
-                 << setw(15) << type
-                 << setw(10) << job_count << "\n";
+            table.add_row({
+                display_name,
+                data.value("provider", "unknown"),
+                data.value("type", "unknown"),
+                std::to_string(job_count)
+            });
         }
-        cout << string(68, '=') << "\n";
 
-    } catch (const exception& e) {
-        cerr << "\nError: " << e.what() << "\n";
+        // Apply styling
+        table[0].format()
+            .font_style({tabulate::FontStyle::bold})
+            .font_align(tabulate::FontAlign::center)
+            .font_color(tabulate::Color::yellow);
+
+        for (size_t i = 0; i < 4; ++i) {
+            table.column(i).format().font_align(tabulate::FontAlign::center);
+        }
+
+        std::cout << table << "\n";
+        
+        if (!active_group.empty()) {
+            std::cout << "(*) Active group context: " << active_group << "\n";
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "\nError listing groups: " << e.what() << "\n";
     }
 }
 

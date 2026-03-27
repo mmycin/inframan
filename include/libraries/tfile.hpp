@@ -313,7 +313,11 @@ FILE* FileHandle<Mixins...>::release() {
 
 template <template <typename> class ... Mixins>
 int FileHandle<Mixins...>::seek(off_t offset, int whence) {
+#ifdef _WIN32
+    return _fseeki64(file_, offset, whence);
+#else
     return fseeko(file_, offset, whence);
+#endif
 }
 
 template <typename Derived>

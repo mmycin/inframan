@@ -1,6 +1,6 @@
 file(GLOB_RECURSE SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/commands/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/commands/*/*.cpp
 )
 
 # Create executable with all source files

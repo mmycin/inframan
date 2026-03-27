@@ -1,83 +1,117 @@
+#include "group-config.hpp"
 #include "delete-job.hpp"
 #include "group-registry.hpp"
+#include "libraries/tabulate.hpp"
+#include "context-manager.hpp"
 
 #include <iostream>
+#include <string>
+#include <vector>
 #include <stdexcept>
 
-using namespace std;
+#ifdef _WIN32
+#undef DeleteJob
+#endif
 
 namespace commands {
 
-static const string REGISTRY = "infragroups.json";
+static const std::string REGISTRY = GroupConfig::registry_file; // Changed to std::string
 
-void DeleteJob::execute() { DeleteJob{}.run(); }
+void DeleteJob::execute() {
+    DeleteJob{}.run();
+}
 
 void DeleteJob::run() {
     try {
-        cout << "\n" << string(50, '=') << "\n"
-             << "           DELETE INFRA JOB\n"
-             << string(50, '=') << "\n";
+        tabulate::Table header;
+        header.add_row({"DELETE INFRASTRUCTURE JOB"});
+        header[0].format()
+            .font_style({tabulate::FontStyle::bold})
+            .font_align(tabulate::FontAlign::center)
+            .font_color(tabulate::Color::red)
+            .border_top("=")
+            .border_bottom("=")
+            .border_left("")
+            .border_right("")
+            .corner("");
+        header.column(0).format().width(50);
+        std::cout << "\n" << header << "\n";
 
-        selectGroup();
+        // Use active group context if available
+        group_name = ContextManager::getActiveGroup();
+        if (group_name.empty()) {
+            selectGroup();
+        } else {
+            std::cout << "Using active group: " << group_name << "\n";
+        }
+
         selectJob();
         confirmAndDelete();
 
-    } catch (const exception& e) {
-        cerr << "\nError: " << e.what() << "\n";
+    } catch (const std::exception& e) {
+        std::cerr << "\nError: " << e.what() << "\n";
     }
 }
 
 void DeleteJob::selectGroup() {
-    GroupRegistry reg(REGISTRY);
-    auto names = reg.listGroupNames();
+    GroupRegistry registry(REGISTRY); // Changed to registry and using REGISTRY constant
+    auto groups = registry.listGroupNames();
 
-    if (names.empty())
-        throw runtime_error("No groups found.");
+    if (groups.empty())
+        throw std::runtime_error("No infrastructure groups found.");
 
-    cout << "\nAvailable groups:\n";
-    for (size_t i = 0; i < names.size(); ++i)
-        cout << "  " << (i + 1) << ". " << names[i] << "\n";
+    std::cout << "\nAvailable Groups:\n";
+    for (size_t i = 0; i < groups.size(); ++i) {
+        std::cout << "  " << (i + 1) << ". " << groups[i] << "\n";
+    }
 
-    cout << "Select group (number): ";
-    int choice; cin >> choice;
+    std::cout << "\nSelect group (number): ";
+    size_t choice;
+    std::cin >> choice;
 
-    if (choice < 1 || choice > static_cast<int>(names.size()))
-        throw runtime_error("Invalid group selection");
+    if (choice < 1 || choice > groups.size())
+        throw std::runtime_error("Invalid selection.");
 
-    group_name = names[choice - 1];
+    group_name = groups[choice - 1];
 }
 
 void DeleteJob::selectJob() {
-    GroupRegistry reg(REGISTRY);
-    auto jobs = reg.listJobNames(group_name);
+    GroupRegistry registry(REGISTRY); // Changed to registry and using REGISTRY constant
+    auto jobs = registry.listJobNames(group_name);
 
     if (jobs.empty())
-        throw runtime_error("No jobs found in group '" + group_name + "'");
+        throw std::runtime_error("No jobs found in group '" + group_name + "'.");
 
-    cout << "\nJobs in '" << group_name << "':\n";
+    std::cout << "\nJobs in group '" << group_name << "':\n";
     for (size_t i = 0; i < jobs.size(); ++i) {
-        cout << "  " << (i + 1) << ". " << jobs[i] << "\n";
+        std::cout << "  " << (i + 1) << ". " << jobs[i] << "\n";
     }
 
-    cout << "Select job to delete (number): ";
-    int choice; cin >> choice;
+    std::cout << "\nSelect job to delete (number): ";
+    size_t choice;
+    std::cin >> choice;
 
-    if (choice < 1 || choice > static_cast<int>(jobs.size()))
-        throw runtime_error("Invalid job selection");
+    if (choice < 1 || choice > jobs.size())
+        throw std::runtime_error("Invalid selection.");
 
     job_name = jobs[choice - 1];
 }
 
 void DeleteJob::confirmAndDelete() {
-    cout << "\nAre you sure you want to delete job '" << job_name << "'? (y/N): ";
-    string confirm; cin >> confirm;
+    std::cout << "\nAre you sure you want to delete job '" << job_name << "' from group '" << group_name << "'? (y/n): ";
+    char confirm;
+    std::cin >> confirm;
 
-    if (confirm == "y" || confirm == "Y") {
-        GroupRegistry reg(REGISTRY);
-        reg.deleteJob(group_name, job_name);
-        cout << "\nJob '" << job_name << "' has been deleted.\n";
+    if (confirm == 'y' || confirm == 'Y') {
+        GroupRegistry registry(REGISTRY); // Changed to registry and using REGISTRY constant
+        registry.deleteJob(group_name, job_name);
+
+        tabulate::Table success;
+        success.add_row({"SUCCESS", "Job '" + job_name + "' deleted."});
+        success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold});
+        std::cout << "\n" << success << "\n";
     } else {
-        cout << "\nDeletion cancelled.\n";
+        std::cout << "\nDeletion cancelled.\n";
     }
 }
 

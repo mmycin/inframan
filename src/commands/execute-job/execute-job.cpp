@@ -1,5 +1,5 @@
 #include "group-config.hpp"
-#include "update-job.hpp"
+#include "execute-job.hpp"
 #include "group-registry.hpp"
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
@@ -7,22 +7,23 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstdlib>
 #include <stdexcept>
 
 namespace commands {
 
-void UpdateJob::execute() {
-    UpdateJob{}.run();
+void ExecuteJob::execute() {
+    ExecuteJob{}.run();
 }
 
-void UpdateJob::run() {
+void ExecuteJob::run() {
     try {
         tabulate::Table header;
-        header.add_row({"UPDATE INFRASTRUCTURE JOB"});
+        header.add_row({"EXECUTE INFRASTRUCTURE JOB"});
         header[0].format()
             .font_style({tabulate::FontStyle::bold})
             .font_align(tabulate::FontAlign::center)
-            .font_color(tabulate::Color::yellow)
+            .font_color(tabulate::Color::magenta)
             .border_top("=")
             .border_bottom("=")
             .border_left("")
@@ -40,22 +41,14 @@ void UpdateJob::run() {
         }
 
         selectJob();
-        promptUpdates();
-
-        GroupRegistry registry(GroupConfig::registry_file);
-        registry.addOrUpdateJob(group_name, job_name, file_path, command);
-
-        tabulate::Table success;
-        success.add_row({"SUCCESS", "Job '" + job_name + "' updated."});
-        success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold});
-        std::cout << "\n" << success << "\n";
+        runCommand();
 
     } catch (const std::exception& e) {
         std::cerr << "\nError: " << e.what() << "\n";
     }
 }
 
-void UpdateJob::selectGroup() {
+void ExecuteJob::selectGroup() {
     GroupRegistry registry(GroupConfig::registry_file);
     auto names = registry.listGroupNames();
 
@@ -76,7 +69,7 @@ void UpdateJob::selectGroup() {
     group_name = names[choice - 1];
 }
 
-void UpdateJob::selectJob() {
+void ExecuteJob::selectJob() {
     GroupRegistry registry(GroupConfig::registry_file);
     auto jobs = registry.listJobNames(group_name);
 
@@ -88,7 +81,7 @@ void UpdateJob::selectJob() {
         std::cout << "  " << (i + 1) << ". " << jobs[i] << "\n";
     }
 
-    std::cout << "\nSelect job to update (number): ";
+    std::cout << "\nSelect job to execute (number): ";
     size_t choice;
     std::cin >> choice;
 
@@ -98,26 +91,49 @@ void UpdateJob::selectJob() {
     job_name = jobs[choice - 1];
 }
 
-void UpdateJob::promptUpdates() {
+void ExecuteJob::runCommand() {
     GroupRegistry registry(GroupConfig::registry_file);
     auto jobs = registry.getJobs(group_name);
     auto job_data = jobs.at(job_name);
 
-    std::cout << "\nUpdating job '" << job_name << "'. Leave empty to keep current value.\n";
+    std::string command = job_data.value("command", "");
+    std::string file_path = job_data.value("file_path", "");
 
-    std::string current_file = job_data.value("file_path", "unknown");
-    std::string current_cmd = job_data.value("command", "unknown");
+    if (command.empty())
+        throw std::runtime_error("Job '" + job_name + "' has no command defined.");
 
-    std::cout << "File path [" << current_file << "]: ";
-    std::string input_file;
-    std::cin.ignore();
-    std::getline(std::cin, input_file);
-    file_path = input_file.empty() ? current_file : input_file;
+    tabulate::Table exec_info;
+    exec_info.add_row({"EXECUTING INFRASTRUCTURE JOB", ""});
+    exec_info.add_row({"Job", job_name});
+    exec_info.add_row({"Group", group_name});
+    exec_info.add_row({"Command", command});
+    if (!file_path.empty())
+        exec_info.add_row({"Path", file_path});
+    
+    exec_info[0].format()
+        .font_style({tabulate::FontStyle::bold})
+        .font_color(tabulate::Color::cyan);
+    
+    for (size_t i = 1; i < exec_info.size(); ++i) {
+        exec_info[i][0].format().font_style({tabulate::FontStyle::bold});
+    }
 
-    std::cout << "Command   [" << current_cmd << "]: ";
-    std::string input_cmd;
-    std::getline(std::cin, input_cmd);
-    command = input_cmd.empty() ? current_cmd : input_cmd;
+    std::cout << "\n" << exec_info << "\n";
+
+    std::cout << "--- Shell Output Starts ---\n";
+    int status = std::system(command.c_str());
+    std::cout << "--- Shell Output Ends ---\n";
+
+    if (status != 0) {
+        std::cerr << "\nWarning: Command exited with status " << status << "\n";
+    } else {
+        tabulate::Table success;
+        success.add_row({"SUCCESS", "Job '" + job_name + "' finished successfully."});
+        success[0][0].format()
+            .font_color(tabulate::Color::green)
+            .font_style({tabulate::FontStyle::bold});
+        std::cout << "\n" << success << "\n";
+    }
 }
 
 } // namespace commands

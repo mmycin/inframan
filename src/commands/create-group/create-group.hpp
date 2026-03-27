@@ -3,20 +3,18 @@
 #include <vector>
 #include "group-config.hpp"
 
-using namespace std;
-
 namespace commands {
 
 class CreateGroup {
 public:
-    inline static const vector<string> flags = {"create-group", "cg", "create"};
-    inline static const string flag = "create-group";
+    inline static const std::string flag = "cg,--create-group";
+    static const inline std::vector<std::string> flags = {"create-group", "cg"};
 
     static void execute();
     void run();
 
 private:
-    string group_name;
+    std::string group_name;
     GroupConfig::Providers provider = GroupConfig::Providers::DOCKER;
     GroupConfig::Type group_type   = GroupConfig::Type::DOCKERFILE;
     int provider_choice = 1;
@@ -43,7 +41,7 @@ private:
     // Output
     void displayConfirmation();
     void createGroupInProvider();
-    string getTypeDescription(GroupConfig::Type type);
+    std::string getTypeDescription(GroupConfig::Type type);
 
     // Type-specific creation
     void createDockerfileGroup();

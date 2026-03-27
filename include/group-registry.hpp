@@ -2,14 +2,11 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "json.hpp"
-#include "tfile.hpp"
+#include "libraries/json.hpp"
+#include "libraries/tfile.hpp"
+#include <filesystem>
 
-using namespace std;
-
-using json = nlohmann::json;
-
-// GroupRegistry: Single source of truth for infragroups.json.
+// GroupRegistry: Single source of truth for the registry file.
 // All file I/O uses tfile.hpp for cross-platform compatibility.
 class GroupRegistry {
 public:
@@ -21,24 +18,24 @@ public:
     void addOrUpdateGroup(const std::string& name,
                           const std::string& provider,
                           const std::string& type) {
-        json root = load();
+        nlohmann::json root = load();
         root["groups"][name]["name"]     = name;
         root["groups"][name]["provider"] = provider;
         root["groups"][name]["type"]     = type;
         if (!root["groups"][name].contains("jobs"))
-            root["groups"][name]["jobs"] = json::object();
+            root["groups"][name]["jobs"] = nlohmann::json::object();
         save(root);
     }
 
     void deleteGroup(const std::string& name) {
-        json root = load();
+        nlohmann::json root = load();
         requireGroup(root, name);
         root["groups"].erase(name);
         save(root);
     }
 
-    json getGroups() {
-        return load().value("groups", json::object());
+    nlohmann::json getGroups() {
+        return load().value("groups", nlohmann::json::object());
     }
 
     bool groupExists(const std::string& name) {
@@ -58,7 +55,7 @@ public:
                         const std::string& job_name,
                         const std::string& file_path,
                         const std::string& command) {
-        json root = load();
+        nlohmann::json root = load();
         requireGroup(root, group);
         root["groups"][group]["jobs"][job_name] = {
             {"name",      job_name},
@@ -69,17 +66,17 @@ public:
     }
 
     void deleteJob(const std::string& group, const std::string& job_name) {
-        json root = load();
+        nlohmann::json root = load();
         requireGroup(root, group);
         requireJob(root, group, job_name);
         root["groups"][group]["jobs"].erase(job_name);
         save(root);
     }
 
-    json getJobs(const std::string& group) {
-        json root = load();
+    nlohmann::json getJobs(const std::string& group) {
+        nlohmann::json root = load();
         requireGroup(root, group);
-        return root["groups"][group].value("jobs", json::object());
+        return root["groups"][group].value("jobs", nlohmann::json::object());
     }
 
     std::vector<std::string> listJobNames(const std::string& group) {
@@ -96,29 +93,33 @@ public:
 private:
     std::string path_;
 
-    json load() {
+    nlohmann::json load() {
         try {
             std::string content = tfile::read(path_.c_str());
             if (!content.empty())
-                return json::parse(content);
+                return nlohmann::json::parse(content);
         } catch (...) {}
-        return json{{"groups", json::object()}};
+        return nlohmann::json{{"groups", nlohmann::json::object()}};
     }
 
-    void save(const json& root) {
+    void save(const nlohmann::json& root) {
         try {
+            std::filesystem::path p(path_);
+            if (p.has_parent_path()) {
+                std::filesystem::create_directories(p.parent_path());
+            }
             tfile::write(path_.c_str(), root.dump(4));
         } catch (const std::exception& e) {
             throw std::runtime_error(std::string("Registry write failed: ") + e.what());
         }
     }
 
-    void requireGroup(const json& root, const std::string& name) {
+    void requireGroup(const nlohmann::json& root, const std::string& name) {
         if (!root["groups"].contains(name))
             throw std::runtime_error("Group not found: " + name);
     }
 
-    void requireJob(const json& root,
+    void requireJob(const nlohmann::json& root,
                     const std::string& group,
                     const std::string& job_name) {
         if (!root["groups"][group]["jobs"].contains(job_name))

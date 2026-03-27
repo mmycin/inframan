@@ -1,70 +1,66 @@
+#include "group-config.hpp"
 #include "add-job.hpp"
 #include "group-registry.hpp"
+#include "libraries/tabulate.hpp"
+#include "context-manager.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
-using namespace std;
+#ifdef _WIN32
+#undef AddJob
+#endif
 
 namespace commands {
 
-static const string REGISTRY = "infragroups.json";
-
-void AddJob::execute() { AddJob{}.run(); }
+void AddJob::execute() {
+    AddJob{}.run();
+}
 
 void AddJob::run() {
     try {
-        cout << "\n" << string(50, '=') << "\n"
-             << "           ADD JOB TO GROUP\n"
-             << string(50, '=') << "\n";
+        tabulate::Table header;
+        header.add_row({"ADD NEW JOB"});
+        header[0].format()
+            .font_style({tabulate::FontStyle::bold})
+            .font_align(tabulate::FontAlign::center)
+            .font_color(tabulate::Color::green)
+            .border_top("=")
+            .border_bottom("=")
+            .border_left("")
+            .border_right("")
+            .corner("");
+        header.column(0).format().width(50);
+        std::cout << "\n" << header << "\n";
 
-        selectGroup();
-        promptFields();
-        validate();
+        std::string group_name = ContextManager::getActiveGroup();
+        if (group_name.empty()) {
+            std::cout << "Enter infrastructure group name: ";
+            std::cin >> group_name;
+        } else {
+            std::cout << "Using active group: " << group_name << "\n";
+        }
 
-        GroupRegistry reg(REGISTRY);
-        reg.addOrUpdateJob(group_name, job_name, file_path, command);
+        std::string job_name, file_path, command;
+        std::cout << "Enter job name: ";
+        std::cin >> job_name;
+        std::cout << "Enter file path: ";
+        std::cin >> file_path;
+        std::cout << "Enter shell command: ";
+        std::cin.ignore();
+        std::getline(std::cin, command);
 
-        cout << "\nJob '" << job_name << "' added to group '" << group_name << "' successfully.\n";
+        GroupRegistry registry(GroupConfig::registry_file);
+        registry.addOrUpdateJob(group_name, job_name, file_path, command);
 
-    } catch (const exception& e) {
-        cerr << "\nError: " << e.what() << "\n";
+        tabulate::Table success;
+        success.add_row({"SUCCESS", "Job added to group '" + group_name + "'"});
+        success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold});
+        std::cout << "\n" << success << "\n";
+
+    } catch (const std::exception& e) {
+        std::cerr << "\nError: " << e.what() << "\n";
     }
-}
-
-void AddJob::selectGroup() {
-    GroupRegistry reg(REGISTRY);
-    auto names = reg.listGroupNames();
-
-    if (names.empty())
-        throw runtime_error("No groups found. Create a group first with: inframanager cg");
-
-    cout << "\nAvailable groups:\n";
-    for (size_t i = 0; i < names.size(); ++i)
-        cout << "  " << (i + 1) << ". " << names[i] << "\n";
-
-    cout << "Select group (number): ";
-    int choice;
-    cin >> choice;
-
-    if (choice < 1 || choice > static_cast<int>(names.size()))
-        throw runtime_error("Invalid group selection");
-
-    group_name = names[choice - 1];
-}
-
-void AddJob::promptFields() {
-    cout << "Job name    : "; cin >> job_name;
-    cout << "File path   : "; cin >> file_path;
-    cout << "Command     : ";
-    cin.ignore();
-    getline(cin, command);
-}
-
-void AddJob::validate() {
-    if (job_name.empty())   throw runtime_error("Job name cannot be empty");
-    if (file_path.empty())  throw runtime_error("File path cannot be empty");
-    if (command.empty())    throw runtime_error("Command cannot be empty");
 }
 
 } // namespace commands

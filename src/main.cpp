@@ -8,6 +8,10 @@
 #include "commands/update-job/update-job.hpp"
 #include "commands/read-job/read-job.hpp"
 #include "commands/delete-job/delete-job.hpp"
+#include "commands/use-group/use-group.hpp"
+#include "commands/update-group/update-group.hpp"
+#include "commands/execute-job/execute-job.hpp"
+#include "commands/run-group/run-group.hpp"
 
 // Helper: register a subcommand with an alias and callback
 template <typename Cmd>
@@ -31,12 +35,16 @@ int main(int argc, char** argv) {
     registerCmd<commands::CreateGroup>(app, "Create a new infrastructure group");
     registerCmd<commands::ListGroup>  (app, "List all groups             [alias: lg]");
     registerCmd<commands::DeleteGroup>(app, "Delete a group              [alias: dg]");
+    registerCmd<commands::UseGroup>   (app, "Set active group context    [alias: use]");
+    registerCmd<commands::UpdateGroup>(app, "Update group metadata       [alias: ug]");
 
     // Job commands
     registerCmd<commands::AddJob>    (app, "Add a job to a group        [alias: aj]");
     registerCmd<commands::UpdateJob> (app, "Update a job in a group     [alias: uj]");
     registerCmd<commands::ReadJob>   (app, "Read jobs of a group        [alias: rj]");
     registerCmd<commands::DeleteJob> (app, "Delete a job from a group   [alias: dj]");
+    registerCmd<commands::ExecuteJob>(app, "Execute a single job        [alias: execute]");
+    registerCmd<commands::RunGroup>  (app, "Run all jobs in a group    [alias: rg]");
 
     CLI11_PARSE(app, argc, argv);
     return 0;

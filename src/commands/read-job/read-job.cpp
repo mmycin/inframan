@@ -1,71 +1,98 @@
+#include "group-config.hpp"
 #include "read-job.hpp"
 #include "group-registry.hpp"
+#include "libraries/tabulate.hpp"
+#include "context-manager.hpp"
 
 #include <iostream>
-#include <iomanip>
-
-using namespace std;
+#include <string>
+#include <vector>
 
 namespace commands {
 
-static const string REGISTRY = "infragroups.json";
-
-void ReadJob::execute() { ReadJob{}.run(); }
+void ReadJob::execute() {
+    ReadJob{}.run();
+}
 
 void ReadJob::run() {
     try {
-        cout << "\n" << string(50, '=') << "\n"
-             << "           READ GROUP JOBS\n"
-             << string(50, '=') << "\n";
+        tabulate::Table header;
+        header.add_row({"READ GROUP JOBS"});
+        header[0].format()
+            .font_style({tabulate::FontStyle::bold})
+            .font_align(tabulate::FontAlign::center)
+            .font_color(tabulate::Color::yellow)
+            .border_top("=")
+            .border_bottom("=")
+            .border_left("")
+            .border_right("")
+            .corner("");
+        header.column(0).format().width(50);
+        std::cout << "\n" << header << "\n";
 
-        selectGroup();
+        // Use active group context if available
+        group_name = ContextManager::getActiveGroup();
+        if (group_name.empty()) {
+            selectGroup();
+        } else {
+            std::cout << "Using active group: " << group_name << "\n";
+        }
 
-        GroupRegistry reg(REGISTRY);
-        auto jobs = reg.getJobs(group_name);
+        GroupRegistry registry(GroupConfig::registry_file);
+        auto jobs = registry.getJobs(group_name);
 
         if (jobs.empty()) {
-            cout << "\nNo jobs found in group '" << group_name << "'.\n";
+            std::cout << "\nNo jobs found in group '" << group_name << "'.\n";
             return;
         }
 
-        cout << "\nJobs in '" << group_name << "':\n"
-             << string(68, '-') << "\n"
-             << left << setw(20) << "JOB NAME" 
-             << setw(20) << "FILE PATH" 
-             << "COMMAND" << "\n"
-             << string(68, '-') << "\n";
+        std::cout << "\nJobs in '" << group_name << "':\n";
+        
+        tabulate::Table table;
+        table.add_row({"Job Name", "File Path", "Command"});
 
-        for (const auto& [name, data] : jobs.items()) {
-            string file = data.value("file_path", "unknown");
-            string cmd = data.value("command", "unknown");
-
-            cout << left << setw(20) << name
-                 << setw(20) << file
-                 << cmd << "\n";
+        for (auto it = jobs.begin(); it != jobs.end(); ++it) {
+            std::string name = it.key();
+            auto data = it.value();
+            table.add_row({
+                name,
+                data.value("file_path", "unknown"),
+                data.value("command", "unknown")
+            });
         }
-        cout << string(68, '-') << "\n";
 
-    } catch (const exception& e) {
-        cerr << "\nError: " << e.what() << "\n";
+        // Apply styling
+        table[0].format()
+            .font_style({tabulate::FontStyle::bold})
+            .font_align(tabulate::FontAlign::center)
+            .font_color(tabulate::Color::yellow);
+
+        table.column(0).format().font_align(tabulate::FontAlign::center);
+
+        std::cout << table << "\n";
+
+    } catch (const std::exception& e) {
+        std::cerr << "\nError: " << e.what() << "\n";
     }
 }
 
 void ReadJob::selectGroup() {
-    GroupRegistry reg(REGISTRY);
-    auto names = reg.listGroupNames();
+    GroupRegistry registry(GroupConfig::registry_file);
+    auto names = registry.listGroupNames();
 
     if (names.empty())
-        throw runtime_error("No groups found.");
+        throw std::runtime_error("No groups found.");
 
-    cout << "\nAvailable groups:\n";
+    std::cout << "\nAvailable groups:\n";
     for (size_t i = 0; i < names.size(); ++i)
-        cout << "  " << (i + 1) << ". " << names[i] << "\n";
+        std::cout << "  " << (i + 1) << ". " << names[i] << "\n";
 
-    cout << "Select group to read (number): ";
-    int choice; cin >> choice;
+    std::cout << "Select group to read (number): ";
+    size_t choice;
+    std::cin >> choice;
 
-    if (choice < 1 || choice > static_cast<int>(names.size()))
-        throw runtime_error("Invalid group selection");
+    if (choice < 1 || choice > names.size())
+        throw std::runtime_error("Invalid selection.");
 
     group_name = names[choice - 1];
 }

@@ -1,65 +1,91 @@
+#include "group-config.hpp"
 #include "delete-group.hpp"
 #include "group-registry.hpp"
+#include "libraries/tabulate.hpp"
+#include "context-manager.hpp"
 
 #include <iostream>
-#include <stdexcept>
-
-using namespace std;
+#include <string>
+#include <vector>
+#include <stdexcept> // Keep this for runtime_error
 
 namespace commands {
 
-static const string REGISTRY = "infragroups.json";
+// static const string REGISTRY = GroupConfig::registry_file; // Removed as per instruction
 
-void DeleteGroup::execute() { DeleteGroup{}.run(); }
+void DeleteGroup::execute() {
+    DeleteGroup{}.run();
+}
 
 void DeleteGroup::run() {
     try {
-        cout << "\n" << string(50, '=') << "\n"
-             << "           DELETE INFRA GROUP\n"
-             << string(50, '=') << "\n";
+        tabulate::Table header;
+        header.add_row({"DELETE INFRASTRUCTURE GROUP"}); // Changed text
+        header[0].format()
+            .font_style({tabulate::FontStyle::bold})
+            .font_align(tabulate::FontAlign::center)
+            .font_color(tabulate::Color::red) // Changed color
+            .border_top("=")
+            .border_bottom("=")
+            .border_left("")
+            .border_right("")
+            .corner("");
+        header.column(0).format().width(50);
+        std::cout << "\n" << header << "\n"; // Added std::
 
         selectGroup();
         confirmAndDelete();
 
-    } catch (const exception& e) {
-        cerr << "\nError: " << e.what() << "\n";
+    } catch (const std::exception& e) { // Added std::
+        std::cerr << "\nError: " << e.what() << "\n"; // Added std::
     }
 }
 
 void DeleteGroup::selectGroup() {
-    GroupRegistry reg(REGISTRY);
-    auto names = reg.listGroupNames();
+    GroupRegistry registry(GroupConfig::registry_file); // Changed variable name and used literal
+    auto groups = registry.listGroupNames(); // Changed variable name
 
-    if (names.empty())
-        throw runtime_error("No groups found. Create a group first with: inframanager cg");
+    if (groups.empty())
+        throw std::runtime_error("No infrastructure groups found."); // Added std:: and changed message
 
-    cout << "\nAvailable groups:\n";
-    for (size_t i = 0; i < names.size(); ++i)
-        cout << "  " << (i + 1) << ". " << names[i] << "\n";
+    std::cout << "\nAvailable Groups:\n"; // Added std:: and changed text
+    for (size_t i = 0; i < groups.size(); ++i) { // Changed variable name, added braces
+        std::cout << "  " << (i + 1) << ". " << groups[i] << "\n"; // Added std:: and changed variable name
+    }
 
-    cout << "Select group to delete (number): ";
-    int choice;
-    cin >> choice;
+    std::cout << "\nSelect group to delete (number): "; // Added std:: and newline
+    size_t choice; // Changed type
+    std::cin >> choice; // Added std::
 
-    if (choice < 1 || choice > static_cast<int>(names.size()))
-        throw runtime_error("Invalid group selection");
+    if (choice < 1 || choice > groups.size()) // Changed variable name
+        throw std::runtime_error("Invalid selection."); // Added std:: and changed message
 
-    group_name = names[choice - 1];
+    group_name = groups[choice - 1]; // Changed variable name
 }
 
 void DeleteGroup::confirmAndDelete() {
-    cout << "\nWARNING: Deleting group '" << group_name << "' will also delete all associated jobs.\n"
-         << "Are you sure? (y/N): ";
-    
-    string confirm;
-    cin >> confirm;
+    // Removed warning table
+    std::cout << "\nAre you sure you want to delete group '" << group_name << "'?\n" // Added std:: and new prompt
+              << "This will also delete ALL jobs in this group. (y/n): ";
+    char confirm; // Changed type
+    std::cin >> confirm; // Added std::
 
-    if (confirm == "y" || confirm == "Y") {
-        GroupRegistry reg(REGISTRY);
-        reg.deleteGroup(group_name);
-        cout << "\nGroup '" << group_name << "' and all its jobs have been deleted.\n";
+    if (confirm == 'y' || confirm == 'Y') { // Changed to char comparison
+        GroupRegistry registry(GroupConfig::registry_file); // Changed variable name and used literal
+        registry.deleteGroup(group_name); // Changed variable name
+
+        // Clear context if this was the active group
+        if (ContextManager::getActiveGroup() == group_name) {
+            ContextManager::clearActiveGroup();
+            std::cout << "Cleared active group context.\n"; // Added std:: and changed message
+        }
+
+        tabulate::Table success; // Added tabulate::
+        success.add_row({"SUCCESS", "Group '" + group_name + "' deleted."}); // Changed content and format
+        success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold}); // Added tabulate::
+        std::cout << "\n" << success << "\n"; // Added std::
     } else {
-        cout << "\nDeletion cancelled.\n";
+        std::cout << "\nDeletion cancelled.\n"; // Added std::
     }
 }
 

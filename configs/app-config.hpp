@@ -2,11 +2,9 @@
 
 #include <string>
 
-using namespace std;
-
 namespace AppConfig {
-	inline static const string name = "InfraManager";
-	inline static const string version = "0.1.0";
-	inline static const string author = "Tahcin Ul Karim (Mycin)";
-	inline static const string description = "Run your infrastructure regionally.";
+	inline static const std::string name = "InfraMan";
+	inline static const std::string version = "0.1.0";
+	inline static const std::string author = "Tahcin Ul Karim (Mycin)";
+	inline static const std::string description = "Run your infrastructure regionally.";
 }

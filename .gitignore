@@ -87,3 +87,5 @@ conanbuildinfo.*
 conaninfo.txt
 
 infragroups.json
+.infra_context
+build_output.txt
