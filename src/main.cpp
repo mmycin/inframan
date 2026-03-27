@@ -12,6 +12,7 @@
 #include "commands/update-group/update-group.hpp"
 #include "commands/execute-job/execute-job.hpp"
 #include "commands/run-group/run-group.hpp"
+#include "commands/stop-group/stop-group.hpp"
 
 // Helper: register a subcommand with an alias and callback
 template <typename Cmd>
@@ -45,6 +46,7 @@ int main(int argc, char** argv) {
     registerCmd<commands::DeleteJob> (app, "Delete a job from a group   [alias: dj]");
     registerCmd<commands::ExecuteJob>(app, "Execute a single job        [alias: execute]");
     registerCmd<commands::RunGroup>  (app, "Run all jobs in a group    [alias: rg]");
+    registerCmd<commands::StopGroup> (app, "Stop all jobs in a group   [alias: sg]");
 
     CLI11_PARSE(app, argc, argv);
     return 0;

@@ -53,13 +53,13 @@ inframan use <group_name>
 
 InfraMan supports several infrastructure types with auto-detected commands:
 
-- **COMPOSE**: Auto-detects `{provider}-compose up -d` and looks for `docker-compose.yml`
-- **DOCKERFILE**: Auto-detects `{provider} build -t {job_name} . && {provider} run -d {job_name}` and looks for `Dockerfile`
-- **SERVICE**: Auto-detects `{provider} service start {job_name}`
-- **TASK**: Auto-detects `{provider} run --rm {job_name}`
-- **NETWORK**: Auto-detects `{provider} network create {job_name}`
-- **VOLUME**: Auto-detects `{provider} volume create {job_name}`
-- **CUSTOM**: Requires manual command specification
+- **COMPOSE**: Auto-detects `{provider}-compose up -d` for start and `{provider}-compose down` for stop, looks for `docker-compose.yml`
+- **DOCKERFILE**: Auto-detects `{provider} build -t {job_name} . && {provider} run -d {job_name}` for start and `{provider} stop {job_name} && {provider} rm {job_name}` for stop, looks for `Dockerfile`
+- **SERVICE**: Auto-detects `{provider} service start {job_name}` for start and `{provider} service stop {job_name}` for stop
+- **TASK**: Auto-detects `{provider} run --rm {job_name}` for start and `{provider} stop {job_name}` for stop
+- **NETWORK**: Auto-detects `{provider} network create {job_name}` for start and `{provider} network rm {job_name}` for stop
+- **VOLUME**: Auto-detects `{provider} volume create {job_name}` for start and `{provider} volume rm {job_name}` for stop
+- **CUSTOM**: Requires manual command specification (stop commands not auto-detected)
 
 ## Usage Examples
 
@@ -76,6 +76,9 @@ inframan aj
 # Run all jobs in the group concurrently
 inframan rg
 
+# Stop all jobs in the group
+inframan sg
+
 # Read all jobs with their configurations
 inframan rj
 ```
@@ -89,6 +92,7 @@ inframan rj
 | `use-group` | `use` | Set active group context |
 | `add-job` | `aj` | Add a job to a group |
 | `run-group` | `rg` | Run all jobs in a group (concurrently) |
+| `stop-group` | `sg` | Stop all jobs in a group |
 | `read-job` | `rj` | Read jobs of a group |
 | `update-job` | `uj` | Update a job in a group |
 | `delete-job` | `dj` | Delete a job from a group |

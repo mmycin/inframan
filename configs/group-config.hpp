@@ -122,4 +122,27 @@ namespace GroupConfig {
     inline bool requiresCommand(Type type) {
         return type == Type::CUSTOM;
     }
+
+    // Auto-detection functions for stop commands
+    inline std::string autoDetectStopCommand(Providers provider, Type type, const std::string& job_name = "") {
+        std::string provider_cmd = providerToString(provider);
+        
+        switch (type) {
+            case Type::COMPOSE:
+                return provider_cmd + "-compose down";
+            case Type::DOCKERFILE:
+                return provider_cmd + " stop " + (job_name.empty() ? "app" : job_name) + " && " + provider_cmd + " rm " + (job_name.empty() ? "app" : job_name);
+            case Type::SERVICE:
+                return provider_cmd + " service stop " + (job_name.empty() ? "service" : job_name);
+            case Type::TASK:
+                return provider_cmd + " stop " + (job_name.empty() ? "task" : job_name);
+            case Type::NETWORK:
+                return provider_cmd + " network rm " + (job_name.empty() ? "network" : job_name);
+            case Type::VOLUME:
+                return provider_cmd + " volume rm " + (job_name.empty() ? "volume" : job_name);
+            case Type::CUSTOM:
+            default:
+                return "";
+        }
+    }
 }
