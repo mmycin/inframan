@@ -101,7 +101,12 @@ void UpdateJob::selectJob() {
 void UpdateJob::promptUpdates() {
     GroupRegistry registry(GroupConfig::registry_file);
     auto jobs = registry.getJobs(group_name);
-    auto job_data = jobs.at(job_name);
+    
+    if (!jobs.contains(job_name)) {
+        throw std::runtime_error("Job '" + job_name + "' not found in group '" + group_name + "'.");
+    }
+    
+    auto job_data = jobs[job_name];
 
     std::cout << "\nUpdating job '" << job_name << "'. Leave empty to keep current value.\n";
 
