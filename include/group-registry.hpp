@@ -81,8 +81,16 @@ public:
 
     std::vector<std::string> listJobNames(const std::string& group) {
         std::vector<std::string> names;
-        for (auto& item : getJobs(group).items())
-            names.push_back(item.key());
+        try {
+            nlohmann::json jobs = getJobs(group);
+            if (jobs.is_object()) {
+                for (auto& item : jobs.items())
+                    names.push_back(item.key());
+            }
+        } catch (const std::exception& e) {
+            // Return empty list if there's an error
+            return names;
+        }
         return names;
     }
 
