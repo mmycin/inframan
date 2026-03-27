@@ -51,6 +51,13 @@ InfraMan stores group settings and registry data locally as JSON files. Specific
 - **Windows**: `C:/ProgramData/inframan/groups/`
 - **Linux**: `/var/inframan/groups/`
 
+## Libraries Used
+InfraMan relies on a curated set of lightweight, header-only C++ dependencies, which are bundled directly inside the `include/libraries` folder for a seamless build process:
+- **[CLI11](https://github.com/CLIUtils/CLI11)** - A command line parser for C++11 and beyond.
+- **[nlohmann/json](https://github.com/nlohmann/json)** - JSON for Modern C++, used for group configurations.
+- **[tabulate](https://github.com/p-ranav/tabulate)** - A table making library for C++ to cleanly render CLI metrics. (A little edited for the current project)
+- **[tfile](https://github.com/andrew-d/tfile)** - A simple wrapper over standard I/O for safer cross-platform reads/writes.
+
 ## Contributing
 Contributions are extremely welcome! Please refer to the [Contributing Code](docs/CONTRIBUTE.md) guide for information on setting up your dev environment, coding standards, and submitting patches.
 

@@ -9,6 +9,8 @@
 #include <vector>
 #include <cstdlib>
 #include <stdexcept>
+#include <filesystem>
+
 
 namespace commands {
 
@@ -121,7 +123,31 @@ void ExecuteJob::runCommand() {
     std::cout << "\n" << exec_info << "\n";
 
     std::cout << "--- Shell Output Starts ---\n";
+
+    std::filesystem::path original_dir;
+    bool dir_changed = false;
+
+    if (!file_path.empty()) {
+        try {
+            std::filesystem::path target_dir = std::filesystem::path(file_path).parent_path();
+            if (!target_dir.empty() && std::filesystem::exists(target_dir)) {
+                original_dir = std::filesystem::current_path();
+                std::filesystem::current_path(target_dir);
+                dir_changed = true;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Could not change directory (" << e.what() << ")\n";
+        }
+    }
+
     int status = std::system(command.c_str());
+
+    if (dir_changed) {
+        try {
+            std::filesystem::current_path(original_dir);
+        } catch (...) {}
+    }
+
     std::cout << "--- Shell Output Ends ---\n";
 
     if (status != 0) {
