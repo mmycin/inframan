@@ -3,6 +3,9 @@ file(GLOB_RECURSE SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/commands/*/*.cpp
 )
 
+# Explicitly add stop-group command to ensure it's included
+list(APPEND SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/commands/stop-group/stop-group.cpp)
+
 # Create executable with all source files
 add_executable(app ${SRC_FILES})
 
