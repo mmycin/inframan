@@ -50,16 +50,24 @@ std::vector<std::string> StatusProcessor::parseServiceNames(const std::string& o
     while (std::getline(iss, line)) {
         line = trim(line);
         if (!line.empty() && line.find("NAME") == std::string::npos) {
-            // Handle both docker-compose --services output and podman-compose ps output
-            // For podman-compose, skip lines that are just separators or headers
+            // Handle both docker-compose output and podman-compose ps output
+            // Skip separator lines, headers, and empty lines
             if (line.find("---") == std::string::npos && 
                 line.find("NAME") == std::string::npos &&
-                line.find("STATUS") == std::string::npos) {
-                // First word is service name
+                line.find("STATUS") == std::string::npos &&
+                line.find("CONTAINER") == std::string::npos &&
+                line.find("IMAGE") == std::string::npos &&
+                line.find("COMMAND") == std::string::npos &&
+                line.find("PORTS") == std::string::npos) {
+                
+                // Extract service name - first word for podman, first column for docker
                 std::istringstream line_stream(line);
                 std::string first_word;
                 if (line_stream >> first_word) {
-                    services.push_back(first_word);
+                    // Skip container IDs (typically long hex strings)
+                    if (first_word.length() < 20) { // Service names are usually shorter than container IDs
+                        services.push_back(first_word);
+                    }
                 }
             }
         }
@@ -167,13 +175,24 @@ std::string StatusProcessor::parseComposeStatus(const std::string& output) {
         if (!line.empty() && 
             line.find("NAME") == std::string::npos && 
             line.find("---") == std::string::npos &&
-            line.find("STATUS") == std::string::npos) {
+            line.find("STATUS") == std::string::npos &&
+            line.find("CONTAINER") == std::string::npos &&
+            line.find("IMAGE") == std::string::npos &&
+            line.find("COMMAND") == std::string::npos &&
+            line.find("PORTS") == std::string::npos) {
             
             // Check for running indicators in the line
-            if (containsIgnoreCase(line, "running") || containsIgnoreCase(line, "up")) {
+            if (containsIgnoreCase(line, "running") || 
+                containsIgnoreCase(line, "up") ||
+                containsIgnoreCase(line, "Up") ||
+                line.find("Up") != std::string::npos) {
                 has_running = true;
+                has_up = true;
             }
-            if (containsIgnoreCase(line, "Up")) {
+            
+            // Also check for "healthy" which indicates running
+            if (containsIgnoreCase(line, "healthy")) {
+                has_running = true;
                 has_up = true;
             }
         }
