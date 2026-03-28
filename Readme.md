@@ -79,6 +79,9 @@ inframan rg
 # Stop all jobs in the group
 inframan sg
 
+# Check status of all jobs
+inframan st
+
 # Read all jobs with their configurations
 inframan rj
 ```
@@ -93,6 +96,7 @@ inframan rj
 | `add-job` | `aj` | Add a job to a group |
 | `run-group` | `rg` | Run all jobs in a group (concurrently) |
 | `stop-group` | `sg` | Stop all jobs in a group |
+| `status` | `st` | Show status of all jobs in a group |
 | `read-job` | `rj` | Read jobs of a group |
 | `update-job` | `uj` | Update a job in a group |
 | `delete-job` | `dj` | Delete a job from a group |

@@ -13,6 +13,8 @@
 #include "commands/execute-job/execute-job.hpp"
 #include "commands/run-group/run-group.hpp"
 #include "commands/stop-group/stop-group.hpp"
+#include "commands/status/status.hpp"
+#include <locale>
 
 // Helper: register a subcommand with an alias and callback
 template <typename Cmd>
@@ -24,6 +26,22 @@ void registerCmd(CLI::App& app, const std::string& desc) {
 }
 
 int main(int argc, char** argv) {
+    // Set locale to fix locale issues
+    try {
+        std::locale::global(std::locale("C"));
+        std::cout.imbue(std::locale("C"));
+        std::cerr.imbue(std::locale("C"));
+    } catch (...) {
+        // Fallback to system locale
+        try {
+            std::locale::global(std::locale(""));
+            std::cout.imbue(std::locale(""));
+            std::cerr.imbue(std::locale(""));
+        } catch (...) {
+            // Use default locale
+        }
+    }
+    
     CLI::App app{AppConfig::description, AppConfig::name};
 
     // Version flag
@@ -47,6 +65,7 @@ int main(int argc, char** argv) {
     registerCmd<commands::ExecuteJob>(app, "Execute a single job        [alias: execute]");
     registerCmd<commands::RunGroup>  (app, "Run all jobs in a group    [alias: rg]");
     registerCmd<commands::StopGroup> (app, "Stop all jobs in a group   [alias: sg]");
+    registerCmd<commands::Status>    (app, "Show status of all jobs    [alias: st]");
 
     CLI11_PARSE(app, argc, argv);
     return 0;

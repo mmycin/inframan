@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <filesystem>
+#include <cstdio>
 
 namespace GroupConfig {
     #ifdef _WIN32
@@ -143,6 +145,97 @@ namespace GroupConfig {
             case Type::CUSTOM:
             default:
                 return "";
+        }
+    }
+
+    // Forward declaration for StatusProcessor (implemented in commands namespace)
+    class StatusProcessor;
+    
+    // Container status checking functions using Lua
+    inline std::string checkContainerStatus(Providers provider, const std::string& job_name) {
+        // This will be replaced with Lua-based processing
+        // For now, keep the original implementation as fallback
+        std::string provider_cmd = providerToString(provider);
+        std::string command = provider_cmd + " ps -a --filter \"name=" + job_name + "\" --format \"{{.Status}}\"";
+        
+        // Execute command and get output
+        std::string result = "";
+        FILE* pipe = _popen(command.c_str(), "r");
+        if (pipe) {
+            char buffer[128];
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+                result += buffer;
+            }
+            _pclose(pipe);
+        }
+        
+        // Trim whitespace and newlines
+        result.erase(0, result.find_first_not_of(" \t\n\r"));
+        result.erase(result.find_last_not_of(" \t\n\r") + 1);
+        
+        return result.empty() ? "down" : result;
+    }
+
+    inline std::string checkComposeStatus(Providers provider, const std::string& file_path) {
+        // This will be replaced with Lua-based processing
+        // For now, keep the original implementation as fallback
+        std::string provider_cmd = providerToString(provider);
+        std::filesystem::path original_dir;
+        bool dir_changed = false;
+        
+        // Change to compose file directory if it exists
+        if (!file_path.empty()) {
+            try {
+                std::filesystem::path target_dir = std::filesystem::path(file_path).parent_path();
+                if (!target_dir.empty() && std::filesystem::exists(target_dir)) {
+                    original_dir = std::filesystem::current_path();
+                    std::filesystem::current_path(target_dir);
+                    dir_changed = true;
+                }
+            } catch (...) {}
+        }
+        
+        std::string command = provider_cmd + "-compose ps --services --format \"table {{.Name}}\t{{.Status}}\"";
+        
+        // Execute command and get output
+        std::string result = "";
+        FILE* pipe = _popen(command.c_str(), "r");
+        if (pipe) {
+            char buffer[256];
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+                result += buffer;
+            }
+            _pclose(pipe);
+        }
+        
+        // Restore original directory
+        if (dir_changed) {
+            try {
+                std::filesystem::current_path(original_dir);
+            } catch (...) {}
+        }
+        
+        // Parse output to find running services
+        if (result.find("running") != std::string::npos) {
+            return "up";
+        }
+        
+        return "down";
+    }
+
+    inline std::string getActualJobStatus(Providers provider, Type type, const std::string& job_name, const std::string& file_path = "") {
+        switch (type) {
+            case Type::COMPOSE:
+                return checkComposeStatus(provider, file_path);
+            case Type::DOCKERFILE:
+            case Type::SERVICE:
+            case Type::TASK:
+                return checkContainerStatus(provider, job_name);
+            case Type::NETWORK:
+            case Type::VOLUME:
+            case Type::CUSTOM:
+            default:
+                return "down"; // Networks and volumes don't have "running" status in the same way
         }
     }
 }

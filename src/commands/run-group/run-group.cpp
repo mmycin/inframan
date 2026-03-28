@@ -1,6 +1,7 @@
 #include "group-config.hpp"
 #include "run-group.hpp"
 #include "group-registry.hpp"
+#include "status-processor.hpp"
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
 
@@ -11,6 +12,9 @@
 #include <stdexcept>
 
 namespace commands {
+
+// Global status processor instance
+static StatusProcessor statusProcessor;
 
 // ─── Public ───────────────────────────────────────────────────────────────────
 
@@ -104,11 +108,27 @@ void RunGroup::runAllJobs() {
     for (auto it = jobs.begin(); it != jobs.end(); ++it) {
         const std::string& job_name  = it.key();
         const auto&        job_data  = it.value();
-        std::string job_status = job_data.value("status", "down");
+        
+        // Get raw status output from container command
+        std::string raw_status;
+        if (type == GroupConfig::Type::COMPOSE) {
+            raw_status = GroupConfig::checkComposeStatus(provider, job_data.value("file_path", ""));
+        } else {
+            raw_status = GroupConfig::checkContainerStatus(provider, job_name);
+        }
+        
+        // Parse status using Lua
+        std::string actual_status;
+        if (type == GroupConfig::Type::COMPOSE) {
+            actual_status = statusProcessor.parseComposeStatus(raw_status);
+        } else {
+            actual_status = statusProcessor.parseContainerStatus(raw_status);
+        }
 
         // Skip jobs that are already "up"
-        if (job_status == "up") {
-            std::cout << "\n[SKIP] Job '" << job_name << "' is already running (status: up).\n";
+        if (statusProcessor.shouldSkipForRun(actual_status)) {
+            std::string formatted_msg = statusProcessor.formatStatusMessage(job_name, actual_status, GroupConfig::typeToString(type));
+            std::cout << "\n[SKIP] " << formatted_msg << " - already running\n";
             continue;
         }
 
