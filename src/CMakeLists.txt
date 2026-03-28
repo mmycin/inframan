@@ -7,9 +7,9 @@ file(GLOB_RECURSE SRC_FILES
 list(APPEND SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/commands/stop-group/stop-group.cpp)
 
 # Create executable with all source files
-add_executable(app ${SRC_FILES})
+add_executable(inframan ${SRC_FILES})
 
-target_include_directories(app
+target_include_directories(inframan
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/include/libraries
@@ -17,6 +17,6 @@ target_include_directories(app
 )
 
 # Use PROJECT_BINARY_DIR instead of CMAKE_BINARY_DIR for consistency
-set_target_properties(app PROPERTIES
+set_target_properties(inframan PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
 )

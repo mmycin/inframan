@@ -54,7 +54,8 @@ public:
     void addOrUpdateJob(const std::string& group,
                         const std::string& job_name,
                         const std::string& file_path = "",
-                        const std::string& command = "") {
+                        const std::string& command = "",
+                        const std::string& status = "down") {
         nlohmann::json root = load();
         requireGroup(root, group);
         
@@ -81,7 +82,8 @@ public:
         root["groups"][group]["jobs"][job_name] = {
             {"name",      job_name},
             {"file_path", detected_file},
-            {"command",   detected_command}
+            {"command",   detected_command},
+            {"status",    status}
         };
         save(root);
     }
@@ -91,6 +93,16 @@ public:
         requireGroup(root, group);
         requireJob(root, group, job_name);
         root["groups"][group]["jobs"].erase(job_name);
+        save(root);
+    }
+
+    void updateJobStatus(const std::string& group, 
+                          const std::string& job_name, 
+                          const std::string& status) {
+        nlohmann::json root = load();
+        requireGroup(root, group);
+        requireJob(root, group, job_name);
+        root["groups"][group]["jobs"][job_name]["status"] = status;
         save(root);
     }
 

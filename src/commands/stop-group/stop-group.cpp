@@ -104,6 +104,13 @@ void StopGroup::stopAllJobs() {
     for (auto it = jobs.begin(); it != jobs.end(); ++it) {
         const std::string& job_name  = it.key();
         const auto&        job_data  = it.value();
+        std::string job_status = job_data.value("status", "down");
+
+        // Skip jobs that are already "down"
+        if (job_status == "down") {
+            std::cout << "\n[SKIP] Job '" << job_name << "' is already stopped (status: down).\n";
+            continue;
+        }
 
         // Use auto-detected stop command if it's not a custom type
         std::string command;
@@ -136,10 +143,14 @@ void StopGroup::stopAllJobs() {
         std::cout << "\n" << job_info << "\n";
 
         int status = stopSingleJob(job_name, command, file_path);
-        if (status == 0)
+        if (status == 0) {
             ++passed;
-        else
+            // Update job status to "down" on successful stop
+            GroupRegistry registry(GroupConfig::registry_file);
+            registry.updateJobStatus(group_name, job_name, "down");
+        } else {
             ++failed;
+        }
     }
 
     // Final report

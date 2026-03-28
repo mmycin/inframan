@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(app VERSION 0.1.0 LANGUAGES CXX)
+project(inframan VERSION 0.1.0 LANGUAGES CXX)
 
 # C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -24,21 +24,20 @@ endif()
 add_subdirectory(src)
 add_subdirectory(tests)
 
-target_include_directories(app 
+target_include_directories(inframan 
 	PRIVATE 
 		${PROJECT_SOURCE_DIR}/include
-		${PROJECT_SOURCE_DIR}/configs
 		${PROJECT_SOURCE_DIR}/include/libraries
+		${PROJECT_SOURCE_DIR}/configs
 )
 
-target_precompile_headers(app
+target_precompile_headers(inframan
     PRIVATE
         ${LIBRARY_HEADERS}
 )
 
 add_custom_target(run
-    COMMAND $<TARGET_FILE:app>
-    DEPENDS app
+    COMMAND $<TARGET_FILE:inframan>
+    DEPENDS inframan
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
-

@@ -104,6 +104,13 @@ void RunGroup::runAllJobs() {
     for (auto it = jobs.begin(); it != jobs.end(); ++it) {
         const std::string& job_name  = it.key();
         const auto&        job_data  = it.value();
+        std::string job_status = job_data.value("status", "down");
+
+        // Skip jobs that are already "up"
+        if (job_status == "up") {
+            std::cout << "\n[SKIP] Job '" << job_name << "' is already running (status: up).\n";
+            continue;
+        }
 
         // Use auto-detected command if it's not a custom type
         std::string command;
@@ -133,10 +140,14 @@ void RunGroup::runAllJobs() {
         std::cout << "\n" << job_info << "\n";
 
         int status = runSingleJob(job_name, command, file_path);
-        if (status == 0)
+        if (status == 0) {
             ++passed;
-        else
+            // Update job status to "up" on successful run
+            GroupRegistry registry(GroupConfig::registry_file);
+            registry.updateJobStatus(group_name, job_name, "up");
+        } else {
             ++failed;
+        }
     }
 
     // Final report

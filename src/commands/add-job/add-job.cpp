@@ -77,7 +77,7 @@ void AddJob::run() {
             std::cout << "Auto-detected command: " << command << "\n";
         }
 
-        registry.addOrUpdateJob(group_name, job_name, file_path, command);
+        registry.addOrUpdateJob(group_name, job_name, file_path, command, "down");
 
         tabulate::Table success;
         success.add_row({"SUCCESS", "Job added to group '" + group_name + "'"});
