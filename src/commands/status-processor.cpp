@@ -50,11 +50,17 @@ std::vector<std::string> StatusProcessor::parseServiceNames(const std::string& o
     while (std::getline(iss, line)) {
         line = trim(line);
         if (!line.empty() && line.find("NAME") == std::string::npos) {
-            // Simple parsing: first word is service name
-            std::istringstream line_stream(line);
-            std::string first_word;
-            if (line_stream >> first_word) {
-                services.push_back(first_word);
+            // Handle both docker-compose --services output and podman-compose ps output
+            // For podman-compose, skip lines that are just separators or headers
+            if (line.find("---") == std::string::npos && 
+                line.find("NAME") == std::string::npos &&
+                line.find("STATUS") == std::string::npos) {
+                // First word is service name
+                std::istringstream line_stream(line);
+                std::string first_word;
+                if (line_stream >> first_word) {
+                    services.push_back(first_word);
+                }
             }
         }
     }
@@ -150,21 +156,30 @@ std::string StatusProcessor::parseComposeStatus(const std::string& output) {
     
     std::string trimmed = trim(output);
     
-    // Parse docker-compose ps output
+    // Parse docker-compose ps output (both Docker and Podman)
     std::istringstream iss(trimmed);
     std::string line;
     bool has_running = false;
+    bool has_up = false;
     
     while (std::getline(iss, line)) {
         line = trim(line);
-        if (!line.empty() && line.find("NAME") == std::string::npos) {
+        if (!line.empty() && 
+            line.find("NAME") == std::string::npos && 
+            line.find("---") == std::string::npos &&
+            line.find("STATUS") == std::string::npos) {
+            
+            // Check for running indicators in the line
             if (containsIgnoreCase(line, "running") || containsIgnoreCase(line, "up")) {
                 has_running = true;
+            }
+            if (containsIgnoreCase(line, "Up")) {
+                has_up = true;
             }
         }
     }
     
-    return has_running ? "up" : "down";
+    return (has_running || has_up) ? "up" : "down";
 }
 
 std::string StatusProcessor::extractJobName(const std::string& output) {

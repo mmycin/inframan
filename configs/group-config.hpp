@@ -212,7 +212,14 @@ namespace GroupConfig {
             } catch (...) {}
         }
         
-        std::string command = provider_cmd + "-compose ps --services --format \"table {{.Name}}\t{{.Status}}\"";
+        // Use different commands for Docker vs Podman
+        std::string command;
+        if (provider == Providers::DOCKER) {
+            command = provider_cmd + "-compose ps --services --format \"table {{.Name}}\t{{.Status}}\"";
+        } else {
+            // Podman-compose doesn't support --services, use regular ps
+            command = provider_cmd + "-compose ps --format \"table {{.Name}}\t{{.Status}}\"";
+        }
         
         // Execute command and get output
         std::string result = "";
