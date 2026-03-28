@@ -203,11 +203,16 @@ namespace GroupConfig {
         // Change to compose file directory if it exists
         if (!file_path.empty()) {
             try {
-                std::filesystem::path target_dir = std::filesystem::path(file_path).parent_path();
-                if (!target_dir.empty() && std::filesystem::exists(target_dir)) {
-                    original_dir = std::filesystem::current_path();
-                    std::filesystem::current_path(target_dir);
-                    dir_changed = true;
+                std::filesystem::path target_path(file_path);
+                if (std::filesystem::exists(target_path)) {
+                    // Correctly handle directory vs file for transition
+                    std::filesystem::path target_dir = std::filesystem::is_directory(target_path) ? target_path : target_path.parent_path();
+                    
+                    if (!target_dir.empty() && std::filesystem::exists(target_dir)) {
+                        original_dir = std::filesystem::current_path();
+                        std::filesystem::current_path(target_dir);
+                        dir_changed = true;
+                    }
                 }
             } catch (...) {}
         }
@@ -250,12 +255,8 @@ namespace GroupConfig {
             } catch (...) {}
         }
         
-        // Parse output to find running services
-        if (result.find("running") != std::string::npos) {
-            return "up";
-        }
-        
-        return "down";
+        // Return raw output for advanced parsing by StatusProcessor
+        return result.empty() ? "down" : result;
     }
 
     inline std::string getActualJobStatus(Providers provider, Type type, const std::string& job_name, const std::string& file_path = "") {

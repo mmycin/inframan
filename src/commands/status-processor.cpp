@@ -220,7 +220,7 @@ std::vector<StatusInfo> StatusProcessor::extractStatusInfo(const std::string& ou
             line_stream >> info.name;
             
             // Extract status
-            info.status = containsIgnoreCase(line, "running") ? "up" : "down";
+            info.status = (containsIgnoreCase(line, "running") || containsIgnoreCase(line, "up")) ? "up" : "down";
             info.is_running = info.status == "up";
             
             info.type = type;
