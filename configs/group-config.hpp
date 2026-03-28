@@ -4,6 +4,12 @@
 #include <filesystem>
 #include <cstdio>
 
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <cstdlib>
+#endif
+
 namespace GroupConfig {
     #ifdef _WIN32
         inline static const std::string group_path = "C:/ProgramData/inframan/groups/";
@@ -160,6 +166,7 @@ namespace GroupConfig {
         
         // Execute command and get output
         std::string result = "";
+#ifdef _WIN32
         FILE* pipe = _popen(command.c_str(), "r");
         if (pipe) {
             char buffer[128];
@@ -168,6 +175,16 @@ namespace GroupConfig {
             }
             _pclose(pipe);
         }
+#else
+        FILE* pipe = popen(command.c_str(), "r");
+        if (pipe) {
+            char buffer[128];
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+                result += buffer;
+            }
+            pclose(pipe);
+        }
+#endif
         
         // Trim whitespace and newlines
         result.erase(0, result.find_first_not_of(" \t\n\r"));
@@ -199,6 +216,7 @@ namespace GroupConfig {
         
         // Execute command and get output
         std::string result = "";
+#ifdef _WIN32
         FILE* pipe = _popen(command.c_str(), "r");
         if (pipe) {
             char buffer[256];
@@ -207,6 +225,16 @@ namespace GroupConfig {
             }
             _pclose(pipe);
         }
+#else
+        FILE* pipe = popen(command.c_str(), "r");
+        if (pipe) {
+            char buffer[256];
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+                result += buffer;
+            }
+            pclose(pipe);
+        }
+#endif
         
         // Restore original directory
         if (dir_changed) {

@@ -7,10 +7,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#ifdef _WIN32
-#undef AddJob
-#endif
-
 namespace commands {
 
 void AddJob::execute() {
