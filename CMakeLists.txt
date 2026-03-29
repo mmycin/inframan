@@ -51,7 +51,7 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY "inframan")
 
 # Generators
 if(WIN32)
-    set(CPACK_GENERATOR "NSIS;ZIP")
+    set(CPACK_GENERATOR "ZIP")
     set(CPACK_NSIS_PACKAGE_NAME "inframan")
     set(CPACK_NSIS_DISPLAY_NAME "inframan")
     set(CPACK_NSIS_HELP_LINK "https://github.com/mmycin/inframan")
