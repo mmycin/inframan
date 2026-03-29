@@ -1,0 +1,21 @@
+{
+    "version": "0.1.0",
+    "description": "Infrastructure Manager CLI",
+    "homepage": "https://github.com/mmycin/inframan",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/mmycin/inframan/releases/download/v0.1.0/inframan-0.1.0-win64.zip",
+            "hash": "REPLACE_WITH_SHA256"
+        }
+    },
+    "bin": "bin/inframan.exe",
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/mmycin/inframan/releases/download/v$version/inframan-$version-win64.zip"
+            }
+        }
+    }
+}

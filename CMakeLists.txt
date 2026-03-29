@@ -36,6 +36,37 @@ target_precompile_headers(inframan
         ${LIBRARY_HEADERS}
 )
 
+# Installation Rules
+include(GNUInstallDirs)
+install(TARGETS inframan
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# CPack Configuration
+set(CPACK_PACKAGE_NAME "inframan")
+set(CPACK_PACKAGE_VENDOR "Mycin")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Infrastructure Manager CLI")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "inframan")
+
+# Generators
+if(WIN32)
+    set(CPACK_GENERATOR "NSIS;ZIP")
+    set(CPACK_NSIS_PACKAGE_NAME "inframan")
+    set(CPACK_NSIS_DISPLAY_NAME "inframan")
+    set(CPACK_NSIS_HELP_LINK "https://github.com/mmycin/inframan")
+    set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/mmycin/inframan")
+    set(CPACK_NSIS_CONTACT "Mycin")
+    set(CPACK_NSIS_MODIFY_PATH ON)
+else()
+    set(CPACK_GENERATOR "DEB;RPM;TGZ")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Mycin")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+    set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+endif()
+
+include(CPack)
+
 add_custom_target(run
     COMMAND $<TARGET_FILE:inframan>
     DEPENDS inframan
