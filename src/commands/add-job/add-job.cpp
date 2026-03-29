@@ -9,6 +9,8 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <thread>
+#include <chrono>
 
 namespace commands {
 
@@ -31,20 +33,24 @@ void AddJob::run() {
             .corner("");
         header.column(0).format().width(50);
         std::cout << "\n" << header << "\n";
+        std::cout.flush();
 
         std::string group_name = ContextManager::getActiveGroup();
         if (group_name.empty()) {
             std::string prompt = "Enter infrastructure group name: ";
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
             if (!linenoise::Readline(prompt.c_str(), group_name)) {
                 throw std::runtime_error("Input cancelled");
             }
             if (group_name.empty()) throw std::runtime_error("Group name cannot be empty");
         } else {
             std::cout << "Using active group: " << rang::fg::yellow << group_name << rang::fg::reset << "\n";
+            std::cout.flush();
         }
 
         std::string job_name, file_path, command;
         std::string name_prompt = "Enter job name: ";
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
         if (!linenoise::Readline(name_prompt.c_str(), job_name)) {
             throw std::runtime_error("Input cancelled");
         }
@@ -66,6 +72,7 @@ void AddJob::run() {
         // Only prompt for file_path if required by type
         if (GroupConfig::requiresFilePath(type)) {
             std::string prompt = "Enter file path [" + GroupConfig::autoDetectFilePath(type, job_name) + "]: ";
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
             if (!linenoise::Readline(prompt.c_str(), file_path)) {
                 throw std::runtime_error("Input cancelled");
             }
@@ -80,6 +87,7 @@ void AddJob::run() {
         if (GroupConfig::requiresCommand(type)) {
             std::string default_cmd = GroupConfig::autoDetectCommand(provider, type, job_name);
             std::string cmd_prompt = "Enter shell command [" + default_cmd + "]: ";
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
             if (!linenoise::Readline(cmd_prompt.c_str(), command)) {
                 throw std::runtime_error("Input cancelled");
             }
@@ -87,6 +95,7 @@ void AddJob::run() {
         } else {
             command = GroupConfig::autoDetectCommand(provider, type, job_name);
             std::cout << "Auto-detected command: " << rang::fg::cyan << command << rang::fg::reset << "\n";
+            std::cout.flush();
         }
 
         registry.addOrUpdateJob(group_name, job_name, file_path, command, "down");
@@ -95,6 +104,7 @@ void AddJob::run() {
         success.add_row({"SUCCESS", "Job added to group '" + group_name + "'"});
         success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold});
         std::cout << "\n" << rang::fg::green << success << rang::fg::reset << "\n";
+        std::cout.flush();
 
     } catch (const std::exception& e) {
         std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";

@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <thread>
+#include <chrono>
 
 namespace commands {
 
@@ -33,6 +35,7 @@ void UpdateJob::run() {
             .corner("");
         header.column(0).format().width(50);
         std::cout << "\n" << rang::fg::yellow << header << rang::fg::reset << "\n";
+        std::cout.flush();
 
         // Use active group context if available
         group_name = ContextManager::getActiveGroup();
@@ -41,6 +44,7 @@ void UpdateJob::run() {
             selectGroup();
         } else {
             std::cout << "Using active group: " << rang::fg::yellow << group_name << rang::fg::reset << "\n";
+            std::cout.flush();
         }
 
         selectJob();
@@ -53,6 +57,7 @@ void UpdateJob::run() {
         success.add_row({"SUCCESS", "Job '" + job_name + "' updated."});
         success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold});
         std::cout << "\n" << rang::fg::green << success << rang::fg::reset << "\n";
+        std::cout.flush();
 
     } catch (const std::exception& e) {
         std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
@@ -69,8 +74,10 @@ void UpdateJob::selectGroup() {
     std::cout << "\nAvailable Groups:\n";
     for (size_t i = 0; i < names.size(); ++i)
         std::cout << "  " << (i + 1) << ". " << names[i] << "\n";
+    std::cout.flush();
 
     std::string input;
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     if (!linenoise::Readline("\nSelect group (number): ", input)) {
         throw std::runtime_error("Input cancelled");
     }
@@ -99,8 +106,10 @@ void UpdateJob::selectJob() {
     for (size_t i = 0; i < jobs.size(); ++i) {
         std::cout << "  " << (i + 1) << ". " << jobs[i] << "\n";
     }
+    std::cout.flush();
 
     std::string input;
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     if (!linenoise::Readline("\nSelect job to update (number): ", input)) {
         throw std::runtime_error("Input cancelled");
     }
@@ -129,17 +138,20 @@ void UpdateJob::promptUpdates() {
     auto job_data = jobs[job_name];
 
     std::cout << "\nUpdating job '" << job_name << "'. " << rang::fg::gray << "Leave empty to keep current value." << rang::fg::reset << "\n";
+    std::cout.flush();
 
     std::string current_file = job_data.value("file_path", "unknown");
     std::string current_cmd = job_data.value("command", "unknown");
 
     std::string prompt = "File path [" + current_file + "]: ";
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     if (!linenoise::Readline(prompt.c_str(), file_path)) {
         throw std::runtime_error("Input cancelled");
     }
     if (file_path.empty()) file_path = current_file;
 
     std::string cmd_prompt = "Command   [" + current_cmd + "]: ";
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     if (!linenoise::Readline(cmd_prompt.c_str(), command)) {
         throw std::runtime_error("Input cancelled");
     }

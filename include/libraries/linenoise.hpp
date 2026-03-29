@@ -1018,9 +1018,11 @@ inline BOOL ParseAndPrintANSIString(HANDLE hDev, LPCVOID lpBuffer, DWORD nNumber
 
 } // namespace ansi
 
+#ifdef _WIN32
 inline HANDLE hOut;
 inline HANDLE hIn;
 inline DWORD consolemodeIn = 0;
+#endif
 
 inline int win32read(int *c) {
     DWORD foo;
@@ -2221,7 +2223,8 @@ inline int linenoiseState::Edit()
         }
 
         switch(c) {
-        case ENTER:    /* enter */
+        case 10:       /* lf */
+        case ENTER:    /* enter (cr) */
             if (!history_.empty()) history_.pop_back();
             if (mlmode_) EditMoveEnd();
             return (int)len_;
