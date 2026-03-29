@@ -70,12 +70,19 @@ void UpdateJob::selectGroup() {
     for (size_t i = 0; i < names.size(); ++i)
         std::cout << "  " << (i + 1) << ". " << names[i] << "\n";
 
-    std::cout << "\nSelect group (number): " << rang::style::bold;
-    size_t choice;
-    std::cin >> choice;
-    std::cout << rang::style::reset;
+    std::string input;
+    if (!linenoise::Readline("\nSelect group (number): ", input)) {
+        throw std::runtime_error("Input cancelled");
+    }
+    
+    int choice = 0;
+    try {
+        choice = std::stoi(input);
+    } catch (...) {
+        throw std::runtime_error("Invalid selection.");
+    }
 
-    if (choice < 1 || choice > names.size())
+    if (choice < 1 || choice > static_cast<int>(names.size()))
         throw std::runtime_error("Invalid selection.");
 
     group_name = names[choice - 1];
@@ -93,12 +100,19 @@ void UpdateJob::selectJob() {
         std::cout << "  " << (i + 1) << ". " << jobs[i] << "\n";
     }
 
-    std::cout << "\nSelect job to update (number): " << rang::style::bold;
-    size_t choice;
-    std::cin >> choice;
-    std::cout << rang::style::reset;
+    std::string input;
+    if (!linenoise::Readline("\nSelect job to update (number): ", input)) {
+        throw std::runtime_error("Input cancelled");
+    }
 
-    if (choice < 1 || choice > jobs.size())
+    int choice = 0;
+    try {
+        choice = std::stoi(input);
+    } catch (...) {
+        throw std::runtime_error("Invalid selection.");
+    }
+
+    if (choice < 1 || choice > static_cast<int>(jobs.size()))
         throw std::runtime_error("Invalid selection.");
 
     job_name = jobs[choice - 1];
@@ -125,12 +139,11 @@ void UpdateJob::promptUpdates() {
     }
     if (file_path.empty()) file_path = current_file;
 
-    std::cout << rang::style::bold << "Command   [" << current_cmd << "]: " << rang::style::reset;
-    std::string input_cmd;
-    // Note: We're not using linenoise for command for now, only for path as requested
-    std::cin.ignore();
-    std::getline(std::cin, input_cmd);
-    command = input_cmd.empty() ? current_cmd : input_cmd;
+    std::string cmd_prompt = "Command   [" + current_cmd + "]: ";
+    if (!linenoise::Readline(cmd_prompt.c_str(), command)) {
+        throw std::runtime_error("Input cancelled");
+    }
+    if (command.empty()) command = current_cmd;
 }
 
 } // namespace commands

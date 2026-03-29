@@ -6,5 +6,5 @@ namespace AppConfig {
 	inline static const std::string name = "InfraMan";
 	inline static const std::string version = "0.1.0";
 	inline static const std::string author = "Tahcin Ul Karim (Mycin)";
-	inline static const std::string description = "Run your infrastructure regionally.";
+	inline static const std::string description = "A modern, high-performance C++ infrastructure manager for container orchestration and regional health monitoring.";
 }

@@ -43,13 +43,27 @@ int main(int argc, char** argv) {
         } catch (...) {}
     }
 
-    // Print ASCII banner
-    AsciiBanner::print();
-
     // Setup path completion for linenoise
     PathCompleter::setup();
 
-    CLI::App app{AppConfig::description, AppConfig::name};
+    // Show banner only on pure execution or help request
+    if (argc == 1) {
+        AsciiBanner::print();
+    }
+
+    std::string full_desc = AppConfig::description + "\nAuthor: " + AppConfig::author;
+    CLI::App app{full_desc, AppConfig::name};
+    
+    // Customize help banner
+    app.preparse_callback([argc, argv](size_t) {
+        for (int i = 0; i < argc; ++i) {
+            std::string arg = argv[i];
+            if (arg == "-h" || arg == "--help") {
+                AsciiBanner::print();
+                break;
+            }
+        }
+    });
 
     // Version flag
     app.add_flag_function(commands::Version::flag, [](int) {

@@ -34,15 +34,21 @@ void AddJob::run() {
 
         std::string group_name = ContextManager::getActiveGroup();
         if (group_name.empty()) {
-            std::cout << rang::style::bold << "Enter infrastructure group name: " << rang::style::reset;
-            std::cin >> group_name;
+            std::string prompt = "Enter infrastructure group name: ";
+            if (!linenoise::Readline(prompt.c_str(), group_name)) {
+                throw std::runtime_error("Input cancelled");
+            }
+            if (group_name.empty()) throw std::runtime_error("Group name cannot be empty");
         } else {
             std::cout << "Using active group: " << rang::fg::yellow << group_name << rang::fg::reset << "\n";
         }
 
         std::string job_name, file_path, command;
-        std::cout << rang::style::bold << "Enter job name: " << rang::style::reset;
-        std::cin >> job_name;
+        std::string name_prompt = "Enter job name: ";
+        if (!linenoise::Readline(name_prompt.c_str(), job_name)) {
+            throw std::runtime_error("Input cancelled");
+        }
+        if (job_name.empty()) throw std::runtime_error("Job name cannot be empty");
         
         // Get group info to determine if file_path and command are required
         GroupRegistry registry(GroupConfig::registry_file);
@@ -72,9 +78,12 @@ void AddJob::run() {
         
         // Only prompt for command if it's a custom type
         if (GroupConfig::requiresCommand(type)) {
-            std::cout << rang::style::bold << "Enter shell command: " << rang::style::reset;
-            std::cin.ignore();
-            std::getline(std::cin, command);
+            std::string default_cmd = GroupConfig::autoDetectCommand(provider, type, job_name);
+            std::string cmd_prompt = "Enter shell command [" + default_cmd + "]: ";
+            if (!linenoise::Readline(cmd_prompt.c_str(), command)) {
+                throw std::runtime_error("Input cancelled");
+            }
+            if (command.empty()) command = default_cmd;
         } else {
             command = GroupConfig::autoDetectCommand(provider, type, job_name);
             std::cout << "Auto-detected command: " << rang::fg::cyan << command << rang::fg::reset << "\n";
