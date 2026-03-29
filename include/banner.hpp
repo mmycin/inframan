@@ -2,7 +2,9 @@
 #pragma once
 #include <string>
 #include <iostream>
+#ifdef _WIN32
 #include <windows.h>
+#endif
 #include "libraries/rang.hpp"
 
 class AsciiBanner {
