@@ -108,7 +108,7 @@ void AddJob::run() {
 
     } catch (const std::exception& e) {
         std::cerr << "\n" << rang::fg::red << "FATAL ERROR: " << e.what() << rang::fg::reset << "\n";
-        std::cerr << rang::fg::gray << "Try running with 'TERM=xterm' or check terminal state." << rang::fg::reset << "\n";
+        std::cerr << rang::fg::gray << "Please check if any [linenoise] Fail MXX messages appeared above." << rang::fg::reset << "\n";
     }
 }
 

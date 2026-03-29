@@ -1726,6 +1726,7 @@ inline bool enableRawMode(int fd) {
     return true;
 
 fatal:
+    fprintf(stderr, "[linenoise] Fail M01: enableRawMode fatal (errno: %d)\n", errno);
     errno = ENOTTY;
     return false;
 }
@@ -2067,7 +2068,10 @@ inline int linenoiseState::EditInsert(const char* cbuf, int clen) {
             if ((!mlmode_ && unicodeColumnPos(prompt_.c_str(), static_cast<int>(prompt_.length()))+unicodeColumnPos(buf_,len_) < cols_) /* || mlmode_ */) {
                 /* Avoid a full update of the line in the
                  * trivial case. */
-                if (write(ofd_,cbuf,clen) == -1) return -1;
+                if (write(ofd_,cbuf,clen) == -1) {
+                    fprintf(stderr, "[linenoise] Fail M09: EditInsert write failed: %s\n", strerror(errno));
+                    return -1;
+                }
             } else {
                 RefreshLine();
             }
@@ -2195,7 +2199,7 @@ inline int linenoiseState::Edit()
     AddHistory("");
 
     if (write(ofd_, prompt_.c_str(), static_cast<int>(prompt_.length())) == -1) { 
-        fprintf(stderr, "[linenoise] Write prompt failed: %s\n", strerror(errno));
+        fprintf(stderr, "[linenoise] Fail M05: Write prompt failed: %s\n", strerror(errno));
         return -1; 
     }
     while(1) {
@@ -2232,7 +2236,7 @@ inline int linenoiseState::Edit()
             if (mlmode_) EditMoveEnd();
             return (int)len_;
         case CTRL_C:     /* ctrl-c */
-            fprintf(stderr, "[linenoise] CTRL-C detected\n");
+            fprintf(stderr, "[linenoise] Fail M06: CTRL-C detected\n");
             errno = EAGAIN;
             return -1;
         case BACKSPACE:   /* backspace */
@@ -2244,7 +2248,7 @@ inline int linenoiseState::Edit()
             if (len_ > 0) {
                 EditDelete();
             } else {
-                fprintf(stderr, "[linenoise] CTRL-D on empty line detected\n");
+                fprintf(stderr, "[linenoise] Fail M07: CTRL-D on empty line detected\n");
                 history_.pop_back();
                 return -1;
             }
@@ -2326,7 +2330,10 @@ inline int linenoiseState::Edit()
             }
             break;
         default:
-            if (EditInsert(cbuf,nread)) return -1;
+            if (EditInsert(cbuf,nread)) {
+                fprintf(stderr, "[linenoise] Fail M08: EditInsert failed\n");
+                return -1;
+            }
             break;
         case CTRL_U: /* Ctrl+u, delete the whole line. */
             wbuf_[0] = '\0';
@@ -2372,8 +2379,10 @@ inline bool linenoiseState::Raw(std::string& line) {
 
             line += c;
         }
-        if (!line.length())
+        if (!line.length()) {
+            fprintf(stderr, "[linenoise] Fail M04: Non-interactive EOF/Empty line\n");
             quit = true;
+        }
 
     } else {
         /* Interactive editing. */
@@ -2390,6 +2399,7 @@ inline bool linenoiseState::Raw(std::string& line) {
 
         auto count = Edit();
         if (count == -1) {
+            fprintf(stderr, "[linenoise] Fail M03: Edit() returned -1\n");
             quit = true;
         } else {
             line.assign(buf_, count);
