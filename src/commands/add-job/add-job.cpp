@@ -12,7 +12,6 @@
 #include <thread>
 #include <chrono>
 
-#include <unistd.h>
 #include <errno.h>
 #include <cstring>
 
