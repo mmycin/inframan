@@ -4,6 +4,7 @@
 #include "status-processor.hpp"
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
+#include "libraries/rang.hpp"
 
 #include <iostream>
 #include <string>
@@ -23,20 +24,20 @@ void Status::execute() {
 
 void Status::run() {
     try {
-        std::cout << "\n=== JOB STATUS OVERVIEW ===\n\n";
+        std::cout << "\n" << rang::style::bold << rang::fg::cyan << "=== JOB STATUS OVERVIEW ===" << rang::style::reset << "\n\n";
 
         // Prefer active group context, otherwise prompt
         group_name = ContextManager::getActiveGroup();
         if (group_name.empty()) {
             selectGroup();
         } else {
-            std::cout << "Using active group: " << group_name << "\n";
+            std::cout << "Using active group: " << rang::fg::yellow << group_name << rang::fg::reset << "\n";
         }
 
         showAllJobsStatus();
 
     } catch (const std::exception& e) {
-        std::cerr << "Error showing status: " << e.what() << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error showing status: " << e.what() << rang::fg::reset << "\n";
     }
 }
 

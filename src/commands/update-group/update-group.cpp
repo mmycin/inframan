@@ -3,6 +3,7 @@
 #include "group-registry.hpp"
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
+#include "libraries/rang.hpp"
 
 #include <iostream>
 #include <string>
@@ -29,14 +30,14 @@ void UpdateGroup::run() {
             .border_right("")
             .corner("");
         header.column(0).format().width(50);
-        std::cout << "\n" << header << "\n";
+        std::cout << "\n" << rang::fg::yellow << header << rang::fg::reset << "\n";
 
         // Use active group context if available
         group_name = ContextManager::getActiveGroup();
         if (group_name.empty()) {
             selectGroup();
         } else {
-            std::cout << "Using active group: " << group_name << "\n";
+            std::cout << "Using active group: " << rang::fg::yellow << group_name << rang::fg::reset << "\n";
         }
 
         promptUpdates();
@@ -47,10 +48,10 @@ void UpdateGroup::run() {
         tabulate::Table success;
         success.add_row({"SUCCESS", "Group '" + group_name + "' updated."});
         success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold});
-        std::cout << "\n" << success << "\n";
+        std::cout << "\n" << rang::fg::green << success << rang::fg::reset << "\n";
 
     } catch (const std::exception& e) {
-        std::cerr << "\nError: " << e.what() << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
     }
 }
 
@@ -65,9 +66,10 @@ void UpdateGroup::selectGroup() {
     for (size_t i = 0; i < names.size(); ++i)
         std::cout << "  " << (i + 1) << ". " << names[i] << "\n";
 
-    std::cout << "\nSelect group to update (number): ";
+    std::cout << "\nSelect group to update (number): " << rang::style::bold;
     size_t choice;
     std::cin >> choice;
+    std::cout << rang::style::reset;
 
     if (choice < 1 || choice > names.size())
         throw std::runtime_error("Invalid selection.");
@@ -83,9 +85,9 @@ void UpdateGroup::promptUpdates() {
     std::string current_provider = group_data.value("provider", "unknown");
     std::string current_type = group_data.value("type", "unknown");
 
-    std::cout << "\nUpdating group '" << group_name << "'. Leave empty to keep current value.\n";
+    std::cout << "\nUpdating group '" << group_name << "'. " << rang::fg::gray << "Leave empty to keep current value." << rang::fg::reset << "\n";
 
-    std::cout << "Provider [" << current_provider << "] (1.docker, 2.podman, 3.containerd): ";
+    std::cout << rang::style::bold << "Provider [" << current_provider << "] (1.docker, 2.podman, 3.containerd): " << rang::style::reset;
     std::string p_choice;
     std::cin.ignore();
     std::getline(std::cin, p_choice);
@@ -106,7 +108,7 @@ void UpdateGroup::promptUpdates() {
         }
     }
 
-    std::cout << "Type [" << current_type << "] (1.dockerfile, 2.compose, 3.service, 4.task, 5.network, 6.volume, 7.custom): ";
+    std::cout << rang::style::bold << "Type [" << current_type << "] (1.dockerfile, 2.compose, 3.service, 4.task, 5.network, 6.volume, 7.custom): " << rang::style::reset;
     std::string t_choice;
     std::getline(std::cin, t_choice);
     

@@ -14,6 +14,8 @@
 #include "commands/run-group/run-group.hpp"
 #include "commands/stop-group/stop-group.hpp"
 #include "commands/status/status.hpp"
+#include "libraries/rang.hpp"
+#include "banner.hpp"
 #include <locale>
 
 // Helper: register a subcommand with an alias and callback
@@ -28,19 +30,20 @@ void registerCmd(CLI::App& app, const std::string& desc) {
 int main(int argc, char** argv) {
     // Set locale to fix locale issues
     try {
-        std::locale::global(std::locale("C"));
-        std::cout.imbue(std::locale("C"));
-        std::cerr.imbue(std::locale("C"));
+        std::locale::global(std::locale(""));
+        std::cout.imbue(std::locale(""));
+        std::cerr.imbue(std::locale(""));
     } catch (...) {
-        // Fallback to system locale
+        // Fallback to "C" locale
         try {
-            std::locale::global(std::locale(""));
-            std::cout.imbue(std::locale(""));
-            std::cerr.imbue(std::locale(""));
-        } catch (...) {
-            // Use default locale
-        }
+            std::locale::global(std::locale("C"));
+            std::cout.imbue(std::locale("C"));
+            std::cerr.imbue(std::locale("C"));
+        } catch (...) {}
     }
+
+    // Print ASCII banner
+    AsciiBanner::print();
     
     CLI::App app{AppConfig::description, AppConfig::name};
 

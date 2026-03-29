@@ -4,6 +4,7 @@
 #include "status-processor.hpp"
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
+#include "libraries/rang.hpp"
 
 #include <iostream>
 #include <string>
@@ -36,20 +37,20 @@ void StopGroup::run() {
             .border_right("")
             .corner("");
         header.column(0).format().width(54);
-        std::cout << "\n" << header << "\n";
+        std::cout << "\n" << rang::fg::red << header << rang::fg::reset << "\n";
 
         // Prefer active group context, otherwise prompt
         group_name = ContextManager::getActiveGroup();
         if (group_name.empty()) {
             selectGroup();
         } else {
-            std::cout << "Using active group: " << group_name << "\n";
+            std::cout << "Using active group: " << rang::fg::yellow << group_name << rang::fg::reset << "\n";
         }
 
         stopAllJobs();
 
     } catch (const std::exception& e) {
-        std::cerr << "\nError: " << e.what() << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
     }
 }
 
@@ -66,9 +67,10 @@ void StopGroup::selectGroup() {
     for (size_t i = 0; i < names.size(); ++i)
         std::cout << "  " << (i + 1) << ". " << names[i] << "\n";
 
-    std::cout << "\nSelect group (number): ";
+    std::cout << "\nSelect group (number): " << rang::style::bold;
     size_t choice;
     std::cin >> choice;
+    std::cout << rang::style::reset;
 
     if (choice < 1 || choice > names.size())
         throw std::runtime_error("Invalid selection.");
@@ -117,7 +119,7 @@ void StopGroup::stopAllJobs() {
             raw_status = GroupConfig::checkContainerStatus(provider, job_name);
         }
         
-        // Parse status using Lua
+        // Parse status using StatusProcessor
         std::string actual_status;
         if (type == GroupConfig::Type::COMPOSE) {
             actual_status = statusProcessor.parseComposeStatus(raw_status);
@@ -128,7 +130,7 @@ void StopGroup::stopAllJobs() {
         // Skip jobs that are already "down"
         if (statusProcessor.shouldSkipForStop(actual_status)) {
             std::string formatted_msg = statusProcessor.formatStatusMessage(job_name, actual_status, GroupConfig::typeToString(type));
-            std::cout << "\n[SKIP] " << formatted_msg << " - already stopped\n";
+            std::cout << "\n" << rang::fg::yellow << "[SKIP] " << rang::fg::reset << formatted_msg << " - already stopped\n";
             continue;
         }
 
@@ -138,7 +140,7 @@ void StopGroup::stopAllJobs() {
             command = GroupConfig::autoDetectStopCommand(provider, type, job_name);
         } else {
             // For custom types, we can't auto-detect stop commands
-            std::cerr << "\n[SKIP] Job '" << job_name << "' is CUSTOM type - stop command not auto-detected.\n";
+            std::cerr << "\n" << rang::fg::yellow << "[SKIP] " << rang::fg::reset << "Job '" << job_name << "' is CUSTOM type - " << rang::fg::yellow << "stop command not auto-detected" << rang::fg::reset << ".\n";
             ++failed;
             continue;
         }
@@ -146,7 +148,7 @@ void StopGroup::stopAllJobs() {
         std::string file_path = job_data.value("file_path", "");
 
         if (command.empty()) {
-            std::cerr << "\n[SKIP] Job '" << job_name << "' has no stop command — skipping.\n";
+            std::cerr << "\n" << rang::fg::yellow << "[SKIP] " << rang::fg::reset << "Job '" << job_name << "' has no stop command — " << rang::fg::yellow << "skipping" << rang::fg::reset << ".\n";
             ++failed;
             continue;
         }
@@ -166,7 +168,6 @@ void StopGroup::stopAllJobs() {
         if (status == 0) {
             ++passed;
             // Update job status to "down" on successful stop
-            GroupRegistry registry(GroupConfig::registry_file);
             registry.updateJobStatus(group_name, job_name, "down");
         } else {
             ++failed;
@@ -210,7 +211,7 @@ void StopGroup::stopAllJobs() {
 int StopGroup::stopSingleJob(const std::string& job_name,
                              const std::string& command,
                              const std::string& file_path) {
-    std::cout << "--- [" << job_name << "] Stop Output Starts ---\n";
+    std::cout << rang::fg::gray << "--- [" << job_name << "] Stop Output Starts ---" << rang::fg::reset << "\n";
 
     std::filesystem::path original_dir;
     bool dir_changed = false;
@@ -224,7 +225,7 @@ int StopGroup::stopSingleJob(const std::string& job_name,
                 dir_changed = true;
             }
         } catch (const std::exception& e) {
-            std::cerr << "Warning: Could not change directory (" << e.what() << ")\n";
+            std::cerr << rang::fg::yellow << "Warning: Could not change directory (" << e.what() << ")" << rang::fg::reset << "\n";
         }
     }
 
@@ -236,12 +237,12 @@ int StopGroup::stopSingleJob(const std::string& job_name,
         } catch (...) {}
     }
 
-    std::cout << "--- [" << job_name << "] Stop Output Ends   ---\n";
+    std::cout << rang::fg::gray << "--- [" << job_name << "] Stop Output Ends   ---" << rang::fg::reset << "\n";
 
     if (status != 0)
-        std::cerr << "[FAIL] '" << job_name << "' stop exited with status " << status << "\n";
+        std::cerr << rang::fg::red << "[FAIL] '" << job_name << "' stop exited with status " << status << rang::fg::reset << "\n";
     else
-        std::cout << "[OK]   '" << job_name << "' stopped successfully.\n";
+        std::cout << rang::fg::green << "[OK]   " << rang::style::bold << "'" << job_name << "' stopped successfully." << rang::style::reset << "\n";
 
     return status;
 }

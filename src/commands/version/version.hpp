@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include "app-config.hpp"
+#include "libraries/rang.hpp"
 
 
 namespace commands {
@@ -10,7 +11,8 @@ namespace commands {
         inline static const std::string flag = "-v,--version";
         
         static void execute() {
-            std::cout << AppConfig::name << " v" << AppConfig::version << std::endl;
+            std::cout << rang::style::bold << rang::fg::cyan << AppConfig::name << rang::style::reset 
+                      << " v" << rang::fg::yellow << AppConfig::version << rang::fg::reset << std::endl;
         }
     };
 }

@@ -3,6 +3,7 @@
 #include "group-registry.hpp"
 #include "context-manager.hpp"
 #include "libraries/tabulate.hpp"
+#include "libraries/rang.hpp"
 
 #include <iostream>
 #include <string>
@@ -29,7 +30,7 @@ void UseGroup::run() {
             .border_right("")
             .corner("");
         header.column(0).format().width(50);
-        std::cout << "\n" << header << "\n";
+        std::cout << "\n" << rang::fg::yellow << header << rang::fg::reset << "\n";
 
         selectGroup();
 
@@ -38,10 +39,10 @@ void UseGroup::run() {
         tabulate::Table success;
         success.add_row({"SUCCESS", "Active group set to '" + group_name + "'"});
         success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold});
-        std::cout << "\n" << success << "\n";
+        std::cout << "\n" << rang::fg::green << success << rang::fg::reset << "\n";
 
     } catch (const std::exception& e) {
-        std::cerr << "\nError: " << e.what() << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
     }
 }
 
@@ -56,9 +57,10 @@ void UseGroup::selectGroup() {
     for (size_t i = 0; i < names.size(); ++i)
         std::cout << "  " << (i + 1) << ". " << names[i] << "\n";
 
-    std::cout << "\nSelect group to use (number): ";
+    std::cout << "\nSelect group to use (number): " << rang::style::bold;
     size_t choice;
     std::cin >> choice;
+    std::cout << rang::style::reset;
 
     if (choice < 1 || choice > names.size())
         throw std::runtime_error("Invalid selection.");

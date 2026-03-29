@@ -3,6 +3,7 @@
 #include "group-registry.hpp"
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
+#include "libraries/rang.hpp"
 
 #include <iostream>
 #include <string>
@@ -15,7 +16,7 @@
 
 namespace commands {
 
-static const std::string REGISTRY = GroupConfig::registry_file; // Changed to std::string
+static const std::string REGISTRY = GroupConfig::registry_file;
 
 void DeleteJob::execute() {
     DeleteJob{}.run();
@@ -35,26 +36,26 @@ void DeleteJob::run() {
             .border_right("")
             .corner("");
         header.column(0).format().width(50);
-        std::cout << "\n" << header << "\n";
+        std::cout << "\n" << rang::fg::red << header << rang::fg::reset << "\n";
 
         // Use active group context if available
         group_name = ContextManager::getActiveGroup();
         if (group_name.empty()) {
             selectGroup();
         } else {
-            std::cout << "Using active group: " << group_name << "\n";
+            std::cout << "Using active group: " << rang::fg::yellow << group_name << rang::fg::reset << "\n";
         }
 
         selectJob();
         confirmAndDelete();
 
     } catch (const std::exception& e) {
-        std::cerr << "\nError: " << e.what() << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
     }
 }
 
 void DeleteJob::selectGroup() {
-    GroupRegistry registry(REGISTRY); // Changed to registry and using REGISTRY constant
+    GroupRegistry registry(REGISTRY);
     auto groups = registry.listGroupNames();
 
     if (groups.empty())
@@ -65,9 +66,10 @@ void DeleteJob::selectGroup() {
         std::cout << "  " << (i + 1) << ". " << groups[i] << "\n";
     }
 
-    std::cout << "\nSelect group (number): ";
+    std::cout << "\nSelect group (number): " << rang::style::bold;
     size_t choice;
     std::cin >> choice;
+    std::cout << rang::style::reset;
 
     if (choice < 1 || choice > groups.size())
         throw std::runtime_error("Invalid selection.");
@@ -76,7 +78,7 @@ void DeleteJob::selectGroup() {
 }
 
 void DeleteJob::selectJob() {
-    GroupRegistry registry(REGISTRY); // Changed to registry and using REGISTRY constant
+    GroupRegistry registry(REGISTRY);
     auto jobs = registry.listJobNames(group_name);
 
     if (jobs.empty())
@@ -87,9 +89,10 @@ void DeleteJob::selectJob() {
         std::cout << "  " << (i + 1) << ". " << jobs[i] << "\n";
     }
 
-    std::cout << "\nSelect job to delete (number): ";
+    std::cout << "\nSelect job to delete (number): " << rang::style::bold;
     size_t choice;
     std::cin >> choice;
+    std::cout << rang::style::reset;
 
     if (choice < 1 || choice > jobs.size())
         throw std::runtime_error("Invalid selection.");
@@ -98,20 +101,21 @@ void DeleteJob::selectJob() {
 }
 
 void DeleteJob::confirmAndDelete() {
-    std::cout << "\nAre you sure you want to delete job '" << job_name << "' from group '" << group_name << "'? (y/n): ";
+    std::cout << "\n" << rang::fg::yellow << "Are you sure you want to delete job '" << job_name << "' from group '" << group_name << "'?" << rang::fg::reset << " (y/n): " << rang::style::bold;
     char confirm;
     std::cin >> confirm;
+    std::cout << rang::style::reset;
 
     if (confirm == 'y' || confirm == 'Y') {
-        GroupRegistry registry(REGISTRY); // Changed to registry and using REGISTRY constant
+        GroupRegistry registry(REGISTRY);
         registry.deleteJob(group_name, job_name);
 
         tabulate::Table success;
         success.add_row({"SUCCESS", "Job '" + job_name + "' deleted."});
         success[0][0].format().font_color(tabulate::Color::green).font_style({tabulate::FontStyle::bold});
-        std::cout << "\n" << success << "\n";
+        std::cout << "\n" << rang::fg::green << success << rang::fg::reset << "\n";
     } else {
-        std::cout << "\nDeletion cancelled.\n";
+        std::cout << "\n" << rang::fg::yellow << "Deletion cancelled." << rang::fg::reset << "\n";
     }
 }
 

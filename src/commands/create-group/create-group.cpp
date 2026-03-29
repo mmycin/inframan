@@ -2,6 +2,7 @@
 #include "group-registry.hpp"
 #include "group-config.hpp"
 #include "libraries/tabulate.hpp"
+#include "libraries/rang.hpp"
 
 #include <iostream>
 #include <string>
@@ -49,7 +50,7 @@ void CreateGroup::run() {
 
         displayConfirmation();
 
-        std::cout << "\nProceed with group creation? (y/n): ";
+        std::cout << "\n" << rang::style::bold << "Proceed with group creation? (y/n): " << rang::style::reset;
         char confirm;
         std::cin >> confirm;
 
@@ -57,15 +58,15 @@ void CreateGroup::run() {
             createGroupInProvider();
             saveToRegistry();
 
-            std::cout << "\nGroup '" << group_name << "' created successfully!\n"
-                      << "Location: " << GroupConfig::group_path << group_name << "\n"
-                      << "Run with: inframan use " << group_name << "\n";
+            std::cout << "\n" << rang::fg::green << "Group '" << group_name << "' created successfully!" << rang::fg::reset << "\n"
+                      << "Location: " << rang::fg::cyan << GroupConfig::group_path << group_name << rang::fg::reset << "\n"
+                      << "Run with: " << rang::style::bold << "inframan use " << group_name << rang::style::reset << "\n";
         } else {
-            std::cout << "\nGroup creation cancelled.\n";
+            std::cout << "\n" << rang::fg::yellow << "Group creation cancelled." << rang::fg::reset << "\n";
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "\nError: " << e.what() << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
     }
 }
 

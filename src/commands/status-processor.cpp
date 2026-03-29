@@ -1,5 +1,6 @@
 #include "status-processor.hpp"
 #include "group-config.hpp"
+#include "libraries/rang.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
@@ -234,11 +235,18 @@ std::vector<StatusInfo> StatusProcessor::extractStatusInfo(const std::string& ou
 std::string StatusProcessor::formatStatusMessage(const std::string& job_name, 
                                                const std::string& status, 
                                                const std::string& type) {
-    std::string status_icon = status == "up" ? "🟢" : "🔴";
-    std::string status_text = status == "up" ? "running" : "stopped";
+    bool is_up = status == "up";
+    std::string status_icon = is_up ? "🟢" : "🔴";
+    std::string status_text = is_up ? "running" : "stopped";
     
     std::ostringstream oss;
-    oss << status_icon << " " << job_name << " (" << type << ") - " << status_text;
+    if (is_up) {
+        oss << status_icon << " " << rang::style::bold << job_name << rang::style::reset 
+            << " (" << type << ") - " << rang::fg::green << status_text << rang::fg::reset;
+    } else {
+        oss << status_icon << " " << rang::style::bold << job_name << rang::style::reset 
+            << " (" << type << ") - " << rang::fg::red << status_text << rang::fg::reset;
+    }
     return oss.str();
 }
 

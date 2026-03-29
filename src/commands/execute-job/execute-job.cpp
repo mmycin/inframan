@@ -3,6 +3,7 @@
 #include "group-registry.hpp"
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
+#include "libraries/rang.hpp"
 
 #include <iostream>
 #include <string>
@@ -25,28 +26,28 @@ void ExecuteJob::run() {
         header[0].format()
             .font_style({tabulate::FontStyle::bold})
             .font_align(tabulate::FontAlign::center)
-            .font_color(tabulate::Color::magenta)
+            .font_color(tabulate::Color::cyan)
             .border_top("=")
             .border_bottom("=")
             .border_left("")
             .border_right("")
             .corner("");
         header.column(0).format().width(50);
-        std::cout << "\n" << header << "\n";
+        std::cout << "\n" << rang::fg::cyan << header << rang::fg::reset << "\n";
 
         // Use active group context if available
         group_name = ContextManager::getActiveGroup();
         if (group_name.empty()) {
             selectGroup();
         } else {
-            std::cout << "Using active group: " << group_name << "\n";
+            std::cout << "Using active group: " << rang::fg::yellow << group_name << rang::fg::reset << "\n";
         }
 
         selectJob();
         runCommand();
 
     } catch (const std::exception& e) {
-        std::cerr << "\nError: " << e.what() << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
     }
 }
 
@@ -61,9 +62,10 @@ void ExecuteJob::selectGroup() {
     for (size_t i = 0; i < names.size(); ++i)
         std::cout << "  " << (i + 1) << ". " << names[i] << "\n";
 
-    std::cout << "\nSelect group (number): ";
+    std::cout << "\nSelect group (number): " << rang::style::bold;
     size_t choice;
     std::cin >> choice;
+    std::cout << rang::style::reset;
 
     if (choice < 1 || choice > names.size())
         throw std::runtime_error("Invalid selection.");
@@ -83,9 +85,10 @@ void ExecuteJob::selectJob() {
         std::cout << "  " << (i + 1) << ". " << jobs[i] << "\n";
     }
 
-    std::cout << "\nSelect job to execute (number): ";
+    std::cout << "\nSelect job to execute (number): " << rang::style::bold;
     size_t choice;
     std::cin >> choice;
+    std::cout << rang::style::reset;
 
     if (choice < 1 || choice > jobs.size())
         throw std::runtime_error("Invalid selection.");
@@ -122,7 +125,7 @@ void ExecuteJob::runCommand() {
 
     std::cout << "\n" << exec_info << "\n";
 
-    std::cout << "--- Shell Output Starts ---\n";
+    std::cout << rang::fg::gray << "--- Shell Output Starts ---" << rang::fg::reset << "\n";
 
     std::filesystem::path original_dir;
     bool dir_changed = false;
@@ -136,7 +139,7 @@ void ExecuteJob::runCommand() {
                 dir_changed = true;
             }
         } catch (const std::exception& e) {
-            std::cerr << "Warning: Could not change directory (" << e.what() << ")\n";
+            std::cerr << rang::fg::yellow << "Warning: Could not change directory (" << e.what() << ")" << rang::fg::reset << "\n";
         }
     }
 
@@ -148,17 +151,17 @@ void ExecuteJob::runCommand() {
         } catch (...) {}
     }
 
-    std::cout << "--- Shell Output Ends ---\n";
+    std::cout << rang::fg::gray << "--- Shell Output Ends ---" << rang::fg::reset << "\n";
 
     if (status != 0) {
-        std::cerr << "\nWarning: Command exited with status " << status << "\n";
+        std::cerr << "\n" << rang::fg::yellow << "Warning: Command exited with status " << status << rang::fg::reset << "\n";
     } else {
         tabulate::Table success;
         success.add_row({"SUCCESS", "Job '" + job_name + "' finished successfully."});
         success[0][0].format()
             .font_color(tabulate::Color::green)
             .font_style({tabulate::FontStyle::bold});
-        std::cout << "\n" << success << "\n";
+        std::cout << "\n" << rang::fg::green << success << rang::fg::reset << "\n";
     }
 }
 

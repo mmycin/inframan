@@ -3,6 +3,7 @@
 #include "group-registry.hpp"
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
+#include "libraries/rang.hpp"
 
 #include <iostream>
 #include <string>
@@ -31,11 +32,11 @@ void ListGroup::run() {
             .border_right("")
             .corner("");
         header.column(0).format().width(60);
-        std::cout << "\n" << header << "\n";
+        std::cout << "\n" << rang::fg::cyan << header << rang::fg::reset << "\n";
 
         if (groups.empty()) {
-            std::cout << "No infrastructure groups found.\n"
-                      << "Create one with: inframan cg\n";
+            std::cout << rang::fg::yellow << "No infrastructure groups found." << rang::fg::reset << "\n"
+                      << "Create one with: " << rang::style::bold << "inframan cg" << rang::style::reset << "\n";
             return;
         }
 
@@ -76,11 +77,11 @@ void ListGroup::run() {
         std::cout << table << "\n";
         
         if (!active_group.empty()) {
-            std::cout << "(*) Active group context: " << active_group << "\n";
+            std::cout << "(*) Active group context: " << rang::fg::yellow << active_group << rang::fg::reset << "\n";
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "\nError listing groups: " << e.what() << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error listing groups: " << e.what() << rang::fg::reset << "\n";
     }
 }
 
