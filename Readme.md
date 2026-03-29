@@ -1,5 +1,7 @@
 # InfraMan
 
+![InfraMan Banner](assets/banner.png)
+
 **InfraMan** is a fast, cross-platform command-line tool written in C++ for managing container infrastructure groups directly from your terminal. It simplifies and automates the process of working with Docker, Podman, and Containerd configurations locally and regionally.
 
 ## Features
