@@ -107,7 +107,8 @@ void AddJob::run() {
         std::cout.flush();
 
     } catch (const std::exception& e) {
-        std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
+        std::cerr << "\n" << rang::fg::red << "FATAL ERROR: " << e.what() << rang::fg::reset << "\n";
+        std::cerr << rang::fg::gray << "Try running with 'TERM=xterm' or check terminal state." << rang::fg::reset << "\n";
     }
 }
 

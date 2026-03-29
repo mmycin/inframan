@@ -2194,7 +2194,10 @@ inline int linenoiseState::Edit()
      * initially is just an empty string. */
     AddHistory("");
 
-    if (write(ofd_, prompt_.c_str(), static_cast<int>(prompt_.length())) == -1) return -1;
+    if (write(ofd_, prompt_.c_str(), static_cast<int>(prompt_.length())) == -1) { 
+        fprintf(stderr, "[linenoise] Write prompt failed: %s\n", strerror(errno));
+        return -1; 
+    }
     while(1) {
         int c;
         char cbuf[4];
@@ -2229,6 +2232,7 @@ inline int linenoiseState::Edit()
             if (mlmode_) EditMoveEnd();
             return (int)len_;
         case CTRL_C:     /* ctrl-c */
+            fprintf(stderr, "[linenoise] CTRL-C detected\n");
             errno = EAGAIN;
             return -1;
         case BACKSPACE:   /* backspace */
@@ -2240,6 +2244,7 @@ inline int linenoiseState::Edit()
             if (len_ > 0) {
                 EditDelete();
             } else {
+                fprintf(stderr, "[linenoise] CTRL-D on empty line detected\n");
                 history_.pop_back();
                 return -1;
             }
