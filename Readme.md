@@ -12,13 +12,30 @@
 - **Fast and Native**: Built in modern C++20 for exceptional performance and minimal footprint.
 - **Cross-Platform**: Fully compatible with Linux and Windows environments out-of-the-box.
 
-## Installation
+### From Releases (Recommended)
 
-### Prerequisites
-- [CMake 3.20](https://cmake.org/) or later
-- C++20 compatible compiler (GCC 10+, Clang 10+, or MSVC 19.30+)
-- A supported container runtime (Docker, Podman, or Containerd)
-- [Just](https://github.com/casey/just) 
+Download the latest pre-compiled binaries from the [GitHub Releases](https://github.com/mmycin/inframan/releases) page.
+
+#### Debian/Ubuntu (.deb)
+```bash
+sudo dpkg -i inframan-*.deb
+```
+
+#### Fedora/RedHat/CentOS (.rpm)
+```bash
+sudo rpm -i inframan-*.rpm
+```
+
+#### Generic Linux (.tar.gz)
+```bash
+tar -xzf inframan-*.tar.gz
+sudo mv inframan /usr/local/bin/
+```
+
+#### Windows (.zip)
+1. Extract `inframan-*.zip`.
+2. Move the `inframan.exe` to a permanent location (e.g., `C:\Program Files\inframan`).
+3. Add that directory to your system **PATH**.
 
 ### Building from Source
 
@@ -34,6 +51,9 @@ just release-build    # or cmake --build build --config Release
 ```
 
 The compiled binary will be placed inside the `bin/` directory.
+
+> [!NOTE]
+> InfraMan requires administrative privileges to create its configuration directories in `/var/inframan/groups/` (Linux) or `C:/ProgramData/inframan/groups/` (Windows) during its first run.
 
 ## Getting Started
 
