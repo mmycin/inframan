@@ -7,7 +7,8 @@
 - **Group Management**: Segment and group related infrastructure components—such as Dockerfiles, Compose setups, services, networks, and persistent volumes.
 - **Auto-Detection**: Automatically generates appropriate commands based on provider and infrastructure type (COMPOSE, DOCKERFILE, SERVICE, TASK, NETWORK, VOLUME).
 - **Concurrent Execution**: Run multiple infrastructure jobs simultaneously for improved performance.
-- **Smart Configuration**: Only prompts for required information based on infrastructure type.
+- **Interactive UI**: Tab-completion for file paths and commands (powered by `linenoise`).
+- **Enhanced Visuals**: Rich, modern terminal styling across Windows and Linux (powered by `rang`).
 - **Fast and Native**: Built in modern C++20 for exceptional performance and minimal footprint.
 - **Cross-Platform**: Fully compatible with Linux and Windows environments out-of-the-box.
 
@@ -26,10 +27,10 @@ git clone https://github.com/mmycin/inframan.git
 cd inframan
 
 # Configure the project
-just dev-preset  # or cmake -B build -DCMAKE_BUILD_TYPE=Release
+just release-preset  # or cmake -B build -DCMAKE_BUILD_TYPE=Release
 
 # Build the project
-just dev-build    # or cmake --build build --config Release
+just release-build    # or cmake --build build --config Release
 ```
 
 The compiled binary will be placed inside the `bin/` directory.
@@ -113,7 +114,10 @@ InfraMan stores group settings and registry data locally as JSON files. Specific
 InfraMan relies on a curated set of lightweight, header-only C++ dependencies, which are bundled directly inside the `include/libraries` folder for a seamless build process:
 - **[CLI11](https://github.com/CLIUtils/CLI11)** - A command line parser for C++11 and beyond.
 - **[nlohmann/json](https://github.com/nlohmann/json)** - JSON for Modern C++, used for group configurations.
-- **[tabulate](https://github.com/p-ranav/tabulate)** - A table making library for C++ to cleanly render CLI metrics. (A little edited for the current project)
+- **[tabulate](https://github.com/p-ranav/tabulate)** - A table making library for C++ to cleanly render CLI metrics.
+- **[rang](https://github.com/agauniyal/rang)** - A minimalist, header-only C++ library for terminal colors.
+- **[linenoise-cpp](https://github.com/yhirose/cpp-linenoise)** - A small, self-contained line editing library.
+    - **Note**: Heavily modified for this project to resolve linker conflicts, fix Linux LF handling, and correct critical return-logic inversions.
 - **[tfile](https://github.com/andrew-d/tfile)** - A simple wrapper over standard I/O for safer cross-platform reads/writes.
 
 ## Contributing
