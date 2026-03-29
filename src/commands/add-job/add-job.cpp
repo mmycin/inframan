@@ -56,16 +56,8 @@ void AddJob::run() {
         std::string name_prompt = "Enter job name: ";
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
         
-        // Diagnostic: Check TTY before linenoise
-        bool is_tty = isatty(0);
-        if (!is_tty) {
-            std::cout << "[system] Warning: isatty(0) is FALSE\n";
-            std::cout.flush();
-        }
-
         if (!linenoise::Readline(name_prompt.c_str(), job_name)) {
-            std::string err_msg = "Input cancelled (Job Name). System errno: " + std::string(strerror(errno));
-            throw std::runtime_error(err_msg);
+            throw std::runtime_error("Input cancelled");
         }
         if (job_name.empty()) throw std::runtime_error("Job name cannot be empty");
         
@@ -87,7 +79,7 @@ void AddJob::run() {
             std::string prompt = "Enter file path [" + GroupConfig::autoDetectFilePath(type, job_name) + "]: ";
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
             if (!linenoise::Readline(prompt.c_str(), file_path)) {
-                throw std::runtime_error("Input cancelled (File Path)");
+                throw std::runtime_error("Input cancelled");
             }
             if (file_path.empty()) {
                 file_path = GroupConfig::autoDetectFilePath(type, job_name);
@@ -102,7 +94,7 @@ void AddJob::run() {
             std::string cmd_prompt = "Enter shell command [" + default_cmd + "]: ";
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
             if (!linenoise::Readline(cmd_prompt.c_str(), command)) {
-                throw std::runtime_error("Input cancelled (Command)");
+                throw std::runtime_error("Input cancelled");
             }
             if (command.empty()) command = default_cmd;
         } else {
@@ -120,8 +112,7 @@ void AddJob::run() {
         std::cout.flush();
 
     } catch (const std::exception& e) {
-        std::cerr << "\n" << rang::fg::red << "FATAL ERROR: " << e.what() << rang::fg::reset << "\n";
-        std::cerr << rang::fg::gray << "Please check if any [linenoise] markers appeared above." << rang::fg::reset << "\n";
+        std::cerr << "\n" << rang::fg::red << "Error: " << e.what() << rang::fg::reset << "\n";
     }
 }
 

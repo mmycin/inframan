@@ -1726,8 +1726,6 @@ inline bool enableRawMode(int fd) {
     return true;
 
 fatal:
-    printf("[linenoise] Fail M01: enableRawMode fatal (errno: %d)\n", errno);
-    fflush(stdout);
     errno = ENOTTY;
     return false;
 }
@@ -2069,11 +2067,7 @@ inline int linenoiseState::EditInsert(const char* cbuf, int clen) {
             if ((!mlmode_ && unicodeColumnPos(prompt_.c_str(), static_cast<int>(prompt_.length()))+unicodeColumnPos(buf_,len_) < cols_) /* || mlmode_ */) {
                 /* Avoid a full update of the line in the
                  * trivial case. */
-                if (write(ofd_,cbuf,clen) == -1) {
-                    printf("[linenoise] Fail M09: EditInsert write failed: %s\n", strerror(errno));
-                    fflush(stdout);
-                    return -1;
-                }
+                if (write(ofd_,cbuf,clen) == -1) return -1;
             } else {
                 RefreshLine();
             }
@@ -2200,11 +2194,7 @@ inline int linenoiseState::Edit()
      * initially is just an empty string. */
     AddHistory("");
 
-    if (write(ofd_, prompt_.c_str(), static_cast<int>(prompt_.length())) == -1) { 
-        printf("[linenoise] Fail M05: Write prompt failed: %s\n", strerror(errno));
-        fflush(stdout);
-        return -1; 
-    }
+    if (write(ofd_, prompt_.c_str(), static_cast<int>(prompt_.length())) == -1) return -1;
     while(1) {
         int c;
         char cbuf[4];
@@ -2239,8 +2229,6 @@ inline int linenoiseState::Edit()
             if (mlmode_) EditMoveEnd();
             return (int)len_;
         case CTRL_C:     /* ctrl-c */
-            printf("[linenoise] Fail M06: CTRL-C detected\n");
-            fflush(stdout);
             errno = EAGAIN;
             return -1;
         case BACKSPACE:   /* backspace */
@@ -2252,8 +2240,6 @@ inline int linenoiseState::Edit()
             if (len_ > 0) {
                 EditDelete();
             } else {
-                printf("[linenoise] Fail M07: CTRL-D on empty line detected\n");
-                fflush(stdout);
                 history_.pop_back();
                 return -1;
             }
@@ -2335,11 +2321,7 @@ inline int linenoiseState::Edit()
             }
             break;
         default:
-            if (EditInsert(cbuf,nread)) {
-                printf("[linenoise] Fail M08: EditInsert failed\n");
-                fflush(stdout);
-                return -1;
-            }
+            if (EditInsert(cbuf,nread)) return -1;
             break;
         case CTRL_U: /* Ctrl+u, delete the whole line. */
             wbuf_[0] = '\0';
@@ -2373,8 +2355,6 @@ inline int linenoiseState::Edit()
  * the STDIN file descriptor set in raw mode. */
 inline bool linenoiseState::Raw(std::string& line) {
     bool quit = false;
-    printf("[linenoise] M00 Entry Raw (isatty: %d)\n", isatty(STDIN_FILENO));
-    fflush(stdout);
 
     if (!isatty(STDIN_FILENO)) {
         /* Not a tty: read from file / pipe. */
@@ -2387,17 +2367,12 @@ inline bool linenoiseState::Raw(std::string& line) {
 
             line += c;
         }
-        if (!line.length()) {
-            printf("[linenoise] Fail M04: Non-interactive EOF/Empty line\n");
-            fflush(stdout);
+        if (!line.length())
             quit = true;
-        }
 
     } else {
         /* Interactive editing. */
         if (enableRawMode(STDIN_FILENO) == false) {
-            printf("[linenoise] Fail M02: enableRawMode failed\n");
-            fflush(stdout);
             return quit;
         }
 
@@ -2410,8 +2385,6 @@ inline bool linenoiseState::Raw(std::string& line) {
 
         auto count = Edit();
         if (count == -1) {
-            printf("[linenoise] Fail M03: Edit() returned -1\n");
-            fflush(stdout);
             quit = true;
         } else {
             line.assign(buf_, count);
@@ -2420,8 +2393,6 @@ inline bool linenoiseState::Raw(std::string& line) {
         disableRawMode(STDIN_FILENO);
         printf("\n");
     }
-    printf("[linenoise] M10 Exit Raw (quit: %d, line: %s)\n", quit, line.c_str());
-    fflush(stdout);
     return quit;
 }
 
@@ -2452,12 +2423,10 @@ inline bool linenoiseState::Readline(std::string& line) {
         printf("%s", prompt_.c_str());
         fflush(stdout);
         std::getline(std::cin, line);
-        return false;
+        return true;
     } else {
-        return Raw(line);
+        return !Raw(line);
     }
-
-    return false;
 }
 
 inline std::string linenoiseState::Readline(bool& quit) {
