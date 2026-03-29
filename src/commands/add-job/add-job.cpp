@@ -12,6 +12,10 @@
 #include <thread>
 #include <chrono>
 
+#include <unistd.h>
+#include <errno.h>
+#include <cstring>
+
 namespace commands {
 
 void AddJob::execute() {
@@ -40,7 +44,7 @@ void AddJob::run() {
             std::string prompt = "Enter infrastructure group name: ";
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
             if (!linenoise::Readline(prompt.c_str(), group_name)) {
-                throw std::runtime_error("Input cancelled");
+                throw std::runtime_error("Input cancelled (Group Name)");
             }
             if (group_name.empty()) throw std::runtime_error("Group name cannot be empty");
         } else {
@@ -51,8 +55,17 @@ void AddJob::run() {
         std::string job_name, file_path, command;
         std::string name_prompt = "Enter job name: ";
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        
+        // Diagnostic: Check TTY before linenoise
+        bool is_tty = isatty(0);
+        if (!is_tty) {
+            std::cout << "[system] Warning: isatty(0) is FALSE\n";
+            std::cout.flush();
+        }
+
         if (!linenoise::Readline(name_prompt.c_str(), job_name)) {
-            throw std::runtime_error("Input cancelled");
+            std::string err_msg = "Input cancelled (Job Name). System errno: " + std::string(strerror(errno));
+            throw std::runtime_error(err_msg);
         }
         if (job_name.empty()) throw std::runtime_error("Job name cannot be empty");
         
@@ -74,7 +87,7 @@ void AddJob::run() {
             std::string prompt = "Enter file path [" + GroupConfig::autoDetectFilePath(type, job_name) + "]: ";
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
             if (!linenoise::Readline(prompt.c_str(), file_path)) {
-                throw std::runtime_error("Input cancelled");
+                throw std::runtime_error("Input cancelled (File Path)");
             }
             if (file_path.empty()) {
                 file_path = GroupConfig::autoDetectFilePath(type, job_name);
@@ -89,7 +102,7 @@ void AddJob::run() {
             std::string cmd_prompt = "Enter shell command [" + default_cmd + "]: ";
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
             if (!linenoise::Readline(cmd_prompt.c_str(), command)) {
-                throw std::runtime_error("Input cancelled");
+                throw std::runtime_error("Input cancelled (Command)");
             }
             if (command.empty()) command = default_cmd;
         } else {
@@ -108,7 +121,7 @@ void AddJob::run() {
 
     } catch (const std::exception& e) {
         std::cerr << "\n" << rang::fg::red << "FATAL ERROR: " << e.what() << rang::fg::reset << "\n";
-        std::cerr << rang::fg::gray << "Please check if any [linenoise] Fail MXX messages appeared above." << rang::fg::reset << "\n";
+        std::cerr << rang::fg::gray << "Please check if any [linenoise] markers appeared above." << rang::fg::reset << "\n";
     }
 }
 
