@@ -1,6 +1,6 @@
 #include "status-processor.hpp"
 #include "group-config.hpp"
-#include "libraries/rang.hpp"
+#include "rang.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <sstream>

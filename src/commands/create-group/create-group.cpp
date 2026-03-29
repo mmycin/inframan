@@ -2,7 +2,7 @@
 #include "group-registry.hpp"
 #include "group-config.hpp"
 #include "libraries/tabulate.hpp"
-#include "libraries/rang.hpp"
+#include "rang.hpp"
 
 #include <iostream>
 #include <string>

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include "app-config.hpp"
-#include "libraries/rang.hpp"
+#include "rang.hpp"
 
 
 namespace commands {

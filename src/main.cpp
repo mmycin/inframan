@@ -16,6 +16,7 @@
 #include "commands/status/status.hpp"
 #include "libraries/rang.hpp"
 #include "banner.hpp"
+#include "path-completer.hpp"
 #include <locale>
 
 // Helper: register a subcommand with an alias and callback
@@ -44,7 +45,10 @@ int main(int argc, char** argv) {
 
     // Print ASCII banner
     AsciiBanner::print();
-    
+
+    // Setup path completion for linenoise
+    PathCompleter::setup();
+
     CLI::App app{AppConfig::description, AppConfig::name};
 
     // Version flag

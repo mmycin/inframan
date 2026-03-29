@@ -4,6 +4,8 @@
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
 #include "libraries/rang.hpp"
+#include "libraries/linenoise.hpp"
+#include "path-completer.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -45,6 +47,9 @@ void AddJob::run() {
         // Get group info to determine if file_path and command are required
         GroupRegistry registry(GroupConfig::registry_file);
         auto groups = registry.getGroups();
+        if (!groups.contains(group_name)) {
+            throw std::runtime_error("Group '" + group_name + "' not found.");
+        }
         auto group_data = groups[group_name];
         std::string provider_str = group_data.value("provider", "docker");
         std::string type_str = group_data.value("type", "compose");
@@ -54,9 +59,10 @@ void AddJob::run() {
         
         // Only prompt for file_path if required by type
         if (GroupConfig::requiresFilePath(type)) {
-            std::cout << rang::style::bold << "Enter file path [" << GroupConfig::autoDetectFilePath(type, job_name) << "]: " << rang::style::reset;
-            std::cin.ignore();
-            std::getline(std::cin, file_path);
+            std::string prompt = "Enter file path [" + GroupConfig::autoDetectFilePath(type, job_name) + "]: ";
+            if (!linenoise::Readline(prompt.c_str(), file_path)) {
+                throw std::runtime_error("Input cancelled");
+            }
             if (file_path.empty()) {
                 file_path = GroupConfig::autoDetectFilePath(type, job_name);
             }

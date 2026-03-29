@@ -4,6 +4,8 @@
 #include "libraries/tabulate.hpp"
 #include "context-manager.hpp"
 #include "libraries/rang.hpp"
+#include "libraries/linenoise.hpp"
+#include "path-completer.hpp"
 
 #include <iostream>
 #include <string>
@@ -117,14 +119,16 @@ void UpdateJob::promptUpdates() {
     std::string current_file = job_data.value("file_path", "unknown");
     std::string current_cmd = job_data.value("command", "unknown");
 
-    std::cout << rang::style::bold << "File path [" << current_file << "]: " << rang::style::reset;
-    std::string input_file;
-    std::cin.ignore();
-    std::getline(std::cin, input_file);
-    file_path = input_file.empty() ? current_file : input_file;
+    std::string prompt = "File path [" + current_file + "]: ";
+    if (!linenoise::Readline(prompt.c_str(), file_path)) {
+        throw std::runtime_error("Input cancelled");
+    }
+    if (file_path.empty()) file_path = current_file;
 
     std::cout << rang::style::bold << "Command   [" << current_cmd << "]: " << rang::style::reset;
     std::string input_cmd;
+    // Note: We're not using linenoise for command for now, only for path as requested
+    std::cin.ignore();
     std::getline(std::cin, input_cmd);
     command = input_cmd.empty() ? current_cmd : input_cmd;
 }
